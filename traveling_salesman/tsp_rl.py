@@ -512,13 +512,20 @@ class TSP_RL:
         )
         return G_S_list_final, Theta_final
 
-    def calculateWalk(self, Theta, G):
-        """
-        :param Theta: object consisting of list of theta weights to use for Q function
-        :param G: graph
-        :return: permutation S of the graph's vertices to walk that approximates the TSP
-        """
-        appendS = lambda i, S: (
-            S if i == G.n else appendS(i + 1, self.updated_S(Theta, G)(S))
-        )
+    def calculateWalk(self, Theta, G, exploreOption=True):
+        """Construct a tour, optionally allowing random exploration."""
+
+        def appendS(i, S):
+            if i == G.n:
+                return S
+
+            return appendS(
+                i + 1,
+                self.updated_S(
+                    Theta,
+                    G,
+                    exploreOption=exploreOption,
+                )(S),
+            )
+
         return appendS(0, [])
