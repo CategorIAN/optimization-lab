@@ -2,6 +2,7 @@ import numpy as np
 from functools import reduce
 from typing import NamedTuple
 from tail_recursive import tail_recursive
+from math import inf
 
 
 class SegmentationResult(NamedTuple):
@@ -79,25 +80,33 @@ def recover_segments(segment_array):
 
 def segmented_least_squares(x, y, cost):
     errors = error_matrix(x, y)
+    n = len(x)
+
+    if n < 2:
+        raise ValueError("At least two points are required.")
 
     def dynamic_update(array, j):
-        index, error = min(
-            (
-                (i, errors[i, j] + cost + array[i][1])
-                for i in range(j + 1)
-            ),
-            key=lambda item: item[1]
-        )
+        candidates = [
+            (i, errors[i, j] + cost + array[i][1])
+            for i in range(j)
+        ]
 
-        return array + [(index, error)]
+        index, objective = min(
+            candidates,
+            key=lambda item: item[1]
+        ) if candidates else (-1, inf)
+
+        return array + [(index, objective)]
 
     results = reduce(
         dynamic_update,
-        range(len(x)),
+        range(n),
         [(-1, 0.0)]
     )
 
-    segment_array = [start for start, _ in results[1:]]
-    optimal_cost = results[-1][1]
+    if results[-1][1] == inf:
+        raise ValueError("No valid segmentation exists.")
 
-    return recover_segments(segment_array), optimal_cost
+    segment_array = [start for start, _ in results[1:]]
+
+    return recover_segments(segment_array), results[-1][1]
