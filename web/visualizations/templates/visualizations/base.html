@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Career{% endblock %}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 16px;
+            padding: 24px 16px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: width 0.2s ease;
+            background: #000000;
+        }
+
+        .sidebar:hover,
+        .sidebar:focus-within {
+            width: 220px;
+        }
+
+        .nav-folder-toggle,
+        .nav-link {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            border: 0;
+            background: transparent;
+            color: #ffffff;
+            font: inherit;
+            text-decoration: none;
+            text-align: left;
+            border-radius: 8px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            pointer-events: none;
+            cursor: pointer;
+        }
+
+        .sidebar:hover .nav-folder-toggle,
+        .sidebar:hover .nav-link,
+        .sidebar:focus-within .nav-folder-toggle,
+        .sidebar:focus-within .nav-link {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nav-folder-toggle:hover,
+        .nav-folder-toggle:focus-visible,
+        .nav-link:hover,
+        .nav-link:focus-visible {
+            background: #374151;
+            outline: none;
+        }
+
+        .nav-folder-toggle::after {
+            content: "▸";
+            float: right;
+        }
+
+        .nav-folder.is-open .nav-folder-toggle::after {
+            content: "▾";
+        }
+
+        .nav-folder-toggle.is-active {
+            background: #1f2937;
+        }
+
+        .nav-submenu {
+            display: grid;
+            max-height: 0;
+            margin: 0;
+            padding-left: 0.75rem;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.2s ease, opacity 0.15s ease;
+        }
+
+        .nav-folder.is-open .nav-submenu {
+            max-height: 24rem;
+            opacity: 1;
+        }
+
+        .nav-submenu .nav-link {
+            font-size: 0.92rem;
+        }
+
+        .nav-link.is-active {
+            background: #4b5563;
+        }
+
+        .page-content {
+            flex: 1;
+            padding: 1rem;
+            min-width: 0;
+        }
+
+        .project-results {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+            background: #d8d8d8;
+            border: 1px solid #8c8c8c;
+        }
+
+        .project-results th,
+        .project-results td {
+            padding: 0.75rem;
+            border: 1px solid #8c8c8c;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        .project-results th {
+            background: #bcbcbc;
+            font-weight: 700;
+        }
+
+        .project-results tr:nth-child(even) td {
+            background: #e4e4e4;
+        }
+
+        .skills-row td {
+            background: #efefef;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .skills-toggle {
+            padding: 0.35rem 0.8rem;
+            border: 1px solid #7d7d7d;
+            background: #f2f2f2;
+            color: #222;
+            cursor: pointer;
+        }
+
+        .skills-toggle:hover {
+            background: #e7e7e7;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.72);
+        }
+
+        .modal-content {
+            position: relative;
+            width: min(700px, 100%);
+            max-height: min(70vh, 640px);
+            overflow-y: auto;
+            background: #fff;
+            color: #111;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        #modal-title {
+            margin: 0 2.5rem 1rem 0;
+        }
+
+        #modal-description {
+            margin: 0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        #close-modal {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            border: none;
+            background: none;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .description-button {
+            background: none;
+            border: none;
+            padding: 0;
+            color: #1d3f75;
+            text-align: left;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .pagination a {
+            padding: 0.35rem 0.8rem;
+            border: 1px solid #7d7d7d;
+            background: #f2f2f2;
+            color: #222;
+            text-decoration: none;
+        }
+
+        .pagination a:hover {
+            background: #e7e7e7;
+        }
+
+        .utility-page {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .utility-page h1 {
+            margin-top: 0;
+        }
+
+        .utility-page-intro {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .utility-card {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #b9b9b9;
+            background: #f7f7f7;
+        }
+
+        .utility-card h2 {
+            margin: 0;
+        }
+
+        .utility-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .utility-copy-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .copy-button {
+            padding: 0.35rem 0.75rem;
+            border: 1px solid #7d7d7d;
+            background: #f2f2f2;
+            color: #222;
+            cursor: pointer;
+        }
+
+        .copy-button:hover {
+            background: #e7e7e7;
+        }
+
+        .copy-button.copied {
+            background: #d9ead3;
+        }
+
+        .utility-field {
+            margin-bottom: 1rem;
+        }
+
+        .utility-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .utility-field-header h3,
+        .utility-field-header h4,
+        .utility-field-header strong,
+        .utility-field-header span {
+            margin: 0;
+        }
+
+        .utility-field-body {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .utility-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .utility-subfields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.5rem 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .utility-subfields-two-column {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 700px) {
+            .utility-subfields-two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .utility-subfield {
+            padding: 0.75rem;
+            border: 1px solid #d2d2d2;
+            background: #ffffff;
+            min-width: 0;
+        }
+
+        .utility-subfield-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .date-blocks {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .date-block {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .date-block-end {
+            margin-left: 0;
+        }
+
+        .date-part-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        @media (max-width: 700px) {
+            .date-part-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .utility-list {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .utility-list li + li {
+            margin-top: 0.35rem;
+        }
+
+        .utility-links a + a {
+            margin-left: 0.75rem;
+        }
+
+        .utility-link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .utility-skill-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem 0.75rem;
+        }
+
+        @media (max-width: 700px) {
+            .utility-skill-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .supervisor-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 0 0 0.15rem 0;
+            padding: 0;
+            line-height: 1.1;
+        }
+
+        .supervisor-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+            width: 100%;
+            text-align: left;
+        }
+
+        .supervisor-details {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            gap: 0.35rem 0.9rem;
+            margin: 0.25rem 0 0 0;
+            padding: 0;
+            line-height: 1.1;
+        }
+
+        .supervisor-detail-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .supervisor-detail-copy-wrap {
+            display: inline-flex;
+            flex: 0 0 auto;
+            width: 3.5rem;
+        }
+
+        .supervisor-action-wrap {
+            display: inline-flex;
+            flex: 0 0 auto;
+            width: 3.5rem;
+        }
+
+        .supervisor-action-button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 3.5rem !important;
+            min-width: 3.5rem !important;
+            max-width: 3.5rem !important;
+            flex: 0 0 3.5rem !important;
+            white-space: nowrap !important;
+        }
+
+        .supervisor-detail-copy-button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 3.5rem !important;
+            min-width: 3.5rem !important;
+            max-width: 3.5rem !important;
+            flex: 0 0 3.5rem !important;
+            padding: 0.1rem 0.35rem !important;
+            font-size: 0.72rem !important;
+            line-height: 1.1 !important;
+            white-space: nowrap !important;
+        }
+
+        .copy-source {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        {% if not request.GET.embed %}
+        <nav class="sidebar" aria-label="Primary navigation">
+
+        </nav>
+        {% endif %}
+
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+<script>
+    const modal = document.getElementById("description-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalDescription = document.getElementById("modal-description");
+    const closeModalButton = document.getElementById("close-modal");
+
+    if (modal && modalTitle && modalDescription && closeModalButton) {
+        const hideModal = () => {
+            modal.classList.add("hidden");
+            document.body.classList.remove("modal-open");
+        };
+
+        document.querySelectorAll(".description-button").forEach(button => {
+            button.addEventListener("click", () => {
+                modalTitle.textContent = button.dataset.title;
+                modalDescription.textContent = button.dataset.description;
+                modal.classList.remove("hidden");
+                document.body.classList.add("modal-open");
+            });
+        });
+
+        closeModalButton.addEventListener("click", hideModal);
+
+        modal.addEventListener("click", event => {
+            if (event.target === modal) {
+                hideModal();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && !modal.classList.contains("hidden")) {
+                hideModal();
+            }
+        });
+    }
+
+    document.querySelectorAll(".skills-toggle").forEach(button => {
+        button.addEventListener("click", () => {
+            const targetId = button.dataset.target;
+            const skillsRow = document.getElementById(targetId);
+
+            if (!skillsRow) {
+                return;
+            }
+
+            const isHidden = skillsRow.classList.contains("hidden");
+            skillsRow.classList.toggle("hidden");
+            button.textContent = isHidden ? "Hide" : "Show";
+        });
+    });
+
+    document.querySelectorAll(".copy-button").forEach(button => {
+        button.addEventListener("click", async () => {
+            const sourceId = button.dataset.copySource;
+            const source = sourceId ? document.getElementById(sourceId) : null;
+
+            if (!source) {
+                return;
+            }
+
+            const text = "value" in source ? source.value : source.textContent;
+            if (!text.trim() || !navigator.clipboard || !navigator.clipboard.writeText) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text.trim());
+                const originalText = button.textContent;
+                button.textContent = "Copied";
+                button.classList.add("copied");
+                window.setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove("copied");
+                }, 1200);
+            } catch (error) {
+                console.error("Clipboard copy failed.", error);
+            }
+        });
+    });
+
+    const navigationFolders = Array.from(document.querySelectorAll(".nav-folder"));
+
+    const setNavigationFolderOpen = (folder, isOpen) => {
+        const toggle = folder.querySelector(".nav-folder-toggle");
+        folder.classList.toggle("is-open", isOpen);
+        toggle.setAttribute("aria-expanded", String(isOpen));
+    };
+
+    const closeNavigationFolders = (except = null) => {
+        navigationFolders.forEach(folder => {
+            if (folder !== except) {
+                setNavigationFolderOpen(folder, false);
+            }
+        });
+    };
+
+    navigationFolders.forEach(folder => {
+        const toggle = folder.querySelector(".nav-folder-toggle");
+
+        toggle.addEventListener("click", () => {
+            const isOpen = folder.classList.contains("is-open");
+            closeNavigationFolders(folder);
+            setNavigationFolderOpen(folder, !isOpen);
+        });
+
+        folder.addEventListener("focusout", () => {
+            window.setTimeout(() => {
+                if (!folder.contains(document.activeElement)) {
+                    setNavigationFolderOpen(folder, false);
+                }
+            });
+        });
+    });
+
+    document.addEventListener("click", event => {
+        if (!event.target.closest(".nav-folder")) {
+            closeNavigationFolders();
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key !== "Escape") {
+            return;
+        }
+
+        const activeFolder = document.activeElement.closest(".nav-folder");
+        if (activeFolder) {
+            event.preventDefault();
+            setNavigationFolderOpen(activeFolder, false);
+            activeFolder.querySelector(".nav-folder-toggle").focus();
+        }
+    });
+</script>
+</html>
