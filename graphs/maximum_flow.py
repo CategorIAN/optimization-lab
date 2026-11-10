@@ -81,11 +81,6 @@ def augmenting_path(residual, source, sink, strategy="bfs"):
         # Avoid discovering the same vertex twice.
         new = list(dict.fromkeys(new))
 
-        new = [
-            node for node in new
-            if node not in parent
-        ]
-
         new_parent = parent | {
             node: current for node in new
         }
@@ -150,7 +145,7 @@ def augment_flow(capacity, flow, path):
     return reduce(update, edges, flow.copy())
 
 
-def ford_fulkerson(capacity, source, sink, strategy="bfs"):
+def ford_fulkerson(capacity, source, sink, strategy="bfs", count=False):
     """
     Compute maximum flow using Ford-Fulkerson.
 
@@ -176,25 +171,27 @@ def ford_fulkerson(capacity, source, sink, strategy="bfs"):
     }
 
     @tail_recursive
-    def go(flow):
+    def go(flow, iterations):
         residual = residual_network(capacity, flow)
-
         path = augmenting_path(
-            residual,
-            source,
-            sink,
-            strategy,
+            residual, source, sink, strategy
         )
 
         if path is None:
             value = (
-                sum(f for (u, v), f in flow.items() if u == source)
-                - sum(f for (u, v), f in flow.items() if v == source)
+                    sum(f for (u, v), f in flow.items() if u == source)
+                    - sum(f for (u, v), f in flow.items() if v == source)
             )
-            return flow, value
+
+            return (
+                (flow, value, iterations)
+                if count
+                else (flow, value)
+            )
 
         return go.tail_call(
-            augment_flow(capacity, flow, path)
+            augment_flow(capacity, flow, path),
+            iterations + 1,
         )
 
-    return go(initial_flow)
+    return go(initial_flow, 0)
