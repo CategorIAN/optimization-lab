@@ -487,12 +487,14 @@
             display: none;
         }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <div class="app-layout">
         {% if not request.GET.embed %}
         <nav class="sidebar" aria-label="Primary navigation">
-
+            <a class="nav-link{% if request.resolver_match.url_name == 'segmented_least_squares' %} is-active{% endif %}"
+               href="{% url 'visualizations:segmented_least_squares' %}">Segmented Least Squares</a>
         </nav>
         {% endif %}
 
@@ -634,4 +636,5 @@
         }
     });
 </script>
+{% block extra_scripts %}{% endblock %}
 </html>

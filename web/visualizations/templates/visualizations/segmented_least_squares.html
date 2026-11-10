@@ -1,0 +1,181 @@
+{% extends "visualizations/base.html" %}
+
+{% block title %}Segmented Least Squares | Optimization Lab{% endblock %}
+
+{% block extra_head %}
+<style>
+    .segmented-least-squares { max-width: 1100px; margin: 0 auto; }
+    .demo-intro { max-width: 70ch; line-height: 1.5; }
+    .demo-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 1.5rem; align-items: start; }
+    .plot-card, .controls-card, .results-card { padding: 1rem; border: 1px solid #b9b9b9; background: #f7f7f7; }
+    .plot-card { background: #fff; }
+    #coordinate-plane { display: block; width: 100%; height: auto; cursor: crosshair; touch-action: manipulation; pointer-events: all; }
+    .plot-click-target { fill: transparent; pointer-events: all; }
+    .control-group { margin-bottom: 1rem; }
+    .control-group label { display: block; margin-bottom: 0.35rem; font-weight: 700; }
+    .control-group input { width: 100%; padding: 0.45rem; border: 1px solid #777; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .button-row button { padding: 0.5rem 0.8rem; border: 1px solid #555; background: #f2f2f2; color: #222; cursor: pointer; }
+    .button-row button:hover:not(:disabled) { background: #e1e1e1; }
+    .button-row button:disabled { cursor: not-allowed; opacity: 0.6; }
+    .results-card { margin-top: 1.5rem; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 0.75rem; }
+    .metric { padding: 0.75rem; background: #fff; border: 1px solid #d2d2d2; }
+    .metric dt { font-size: 0.85rem; font-weight: 700; }
+    .metric dd { margin: 0.3rem 0 0; font-variant-numeric: tabular-nums; }
+    .status { min-height: 1.5rem; margin: 0.75rem 0 0; color: #333; }
+    .status.error { color: #a40000; }
+    .plot-label { fill: #555; font-size: 13px; }
+    .grid-line { stroke: #e3e3e3; stroke-width: 1; }
+    .axis-line { stroke: #777; stroke-width: 1.5; }
+    .data-point { fill: #155e9b; stroke: #fff; stroke-width: 1.5; }
+    .fitted-segment { stroke: #d14900; stroke-width: 3; stroke-linecap: round; }
+    @media (max-width: 800px) { .demo-layout { grid-template-columns: 1fr; } .metrics { grid-template-columns: repeat(2, minmax(120px, 1fr)); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="segmented-least-squares">
+    <h1>Segmented Least Squares</h1>
+    <p class="demo-intro">Click the coordinate plane to place points. Choose a non-negative penalty for each fitted segment, then solve to see the piecewise linear fit produced by the existing dynamic-programming algorithm.</p>
+    <div class="demo-layout">
+        <div class="plot-card">
+            <svg id="coordinate-plane" viewBox="0 0 600 420" role="img" aria-label="Interactive coordinate plane. Click to add points."></svg>
+            <p id="point-count" aria-live="polite">0 points</p>
+        </div>
+        <div class="controls-card">
+            <div class="control-group">
+                <label for="penalty">Segment penalty</label>
+                <input id="penalty" name="penalty" type="number" min="0" step="0.1" value="10">
+            </div>
+            <div class="button-row">
+                <button id="solve" type="button">Solve</button>
+                <button id="remove-point" type="button">Remove last point</button>
+                <button id="clear-points" type="button">Clear points</button>
+            </div>
+            <p id="status" class="status" role="status" aria-live="polite"></p>
+        </div>
+    </div>
+    <section class="results-card" aria-labelledby="results-heading">
+        <h2 id="results-heading">Results</h2>
+        <dl class="metrics">
+            <div class="metric"><dt>Segments</dt><dd id="segment-count">—</dd></div>
+            <div class="metric"><dt>Total squared error</dt><dd id="squared-error">—</dd></div>
+            <div class="metric"><dt>Objective value</dt><dd id="objective">—</dd></div>
+            <div class="metric"><dt>Execution time</dt><dd id="execution-time">—</dd></div>
+        </dl>
+    </section>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(() => {
+    const svg = document.getElementById("coordinate-plane");
+    const penaltyInput = document.getElementById("penalty");
+    const solveButton = document.getElementById("solve");
+    const removeButton = document.getElementById("remove-point");
+    const clearButton = document.getElementById("clear-points");
+    const status = document.getElementById("status");
+    const pointCount = document.getElementById("point-count");
+    const metrics = {
+        segments: document.getElementById("segment-count"),
+        error: document.getElementById("squared-error"),
+        objective: document.getElementById("objective"),
+        time: document.getElementById("execution-time"),
+    };
+    const dimensions = { width: 600, height: 420, left: 55, right: 20, top: 20, bottom: 45 };
+    const points = [];
+    let fittedSegments = [];
+
+    const plotWidth = dimensions.width - dimensions.left - dimensions.right;
+    const plotHeight = dimensions.height - dimensions.top - dimensions.bottom;
+    const toSvgX = x => dimensions.left + (x / 100) * plotWidth;
+    const toSvgY = y => dimensions.top + (1 - y / 100) * plotHeight;
+    const escapeText = value => String(value).replace(/[&<>"']/g, char => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"})[char]);
+
+    function clearResults() {
+        fittedSegments = [];
+        Object.values(metrics).forEach(element => { element.textContent = "—"; });
+    }
+
+    function setStatus(message = "", isError = false) {
+        status.textContent = message;
+        status.classList.toggle("error", isError);
+    }
+
+    function render() {
+        const grid = [];
+        for (let tick = 0; tick <= 100; tick += 20) {
+            const x = toSvgX(tick);
+            const y = toSvgY(tick);
+            grid.push(`<line class="grid-line" x1="${x}" y1="${dimensions.top}" x2="${x}" y2="${dimensions.top + plotHeight}" />`);
+            grid.push(`<line class="grid-line" x1="${dimensions.left}" y1="${y}" x2="${dimensions.left + plotWidth}" y2="${y}" />`);
+            grid.push(`<text class="plot-label" x="${x}" y="${dimensions.top + plotHeight + 20}" text-anchor="middle">${tick}</text>`);
+            grid.push(`<text class="plot-label" x="${dimensions.left - 10}" y="${y + 4}" text-anchor="end">${tick}</text>`);
+        }
+        const lines = fittedSegments.map(segment => `<line class="fitted-segment" x1="${toSvgX(segment.start.x)}" y1="${toSvgY(segment.start.y)}" x2="${toSvgX(segment.end.x)}" y2="${toSvgY(segment.end.y)}" />`).join("");
+        const dots = points.map(point => `<circle class="data-point" cx="${toSvgX(point.x)}" cy="${toSvgY(point.y)}" r="5"><title>(${escapeText(point.x)}, ${escapeText(point.y)})</title></circle>`).join("");
+        svg.innerHTML = `<rect class="plot-click-target" x="${dimensions.left}" y="${dimensions.top}" width="${plotWidth}" height="${plotHeight}" />${grid.join("")}<line class="axis-line" x1="${dimensions.left}" y1="${dimensions.top + plotHeight}" x2="${dimensions.left + plotWidth}" y2="${dimensions.top + plotHeight}" /><line class="axis-line" x1="${dimensions.left}" y1="${dimensions.top}" x2="${dimensions.left}" y2="${dimensions.top + plotHeight}" />${lines}${dots}<text class="plot-label" x="${dimensions.left + plotWidth / 2}" y="${dimensions.height - 6}" text-anchor="middle">x</text><text class="plot-label" x="15" y="${dimensions.top + plotHeight / 2}" text-anchor="middle" transform="rotate(-90 15 ${dimensions.top + plotHeight / 2})">y</text>`;
+        pointCount.textContent = `${points.length} ${points.length === 1 ? "point" : "points"}`;
+        removeButton.disabled = points.length === 0;
+        clearButton.disabled = points.length === 0;
+    }
+
+    function getCookie(name) {
+        return document.cookie.split("; ").find(row => row.startsWith(`${name}=`))?.split("=")[1] || "";
+    }
+
+    function clientToSvgPoint(event) {
+        const screenMatrix = svg.getScreenCTM();
+        if (!screenMatrix) return null;
+        const point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        return point.matrixTransform(screenMatrix.inverse());
+    }
+
+    svg.addEventListener("click", event => {
+        const point = clientToSvgPoint(event);
+        if (!point || point.x < dimensions.left || point.x > dimensions.left + plotWidth || point.y < dimensions.top || point.y > dimensions.top + plotHeight) return;
+        points.push({ x: Number((((point.x - dimensions.left) / plotWidth) * 100).toFixed(1)), y: Number((((dimensions.top + plotHeight - point.y) / plotHeight) * 100).toFixed(1)) });
+        clearResults();
+        setStatus();
+        render();
+    });
+
+    removeButton.addEventListener("click", () => { points.pop(); clearResults(); setStatus(); render(); });
+    clearButton.addEventListener("click", () => { points.length = 0; clearResults(); setStatus(); render(); });
+
+    solveButton.addEventListener("click", async () => {
+        const penalty = Number(penaltyInput.value);
+        if (points.length < 2) { setStatus("Add at least two points before solving.", true); return; }
+        if (!Number.isFinite(penalty) || penalty < 0) { setStatus("Enter a non-negative numeric penalty.", true); return; }
+        solveButton.disabled = true;
+        setStatus("Solving…");
+        try {
+            const response = await fetch("{% url 'visualizations:solve_segmented_least_squares' %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(getCookie("csrftoken")) },
+                body: JSON.stringify({ points, penalty }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "The algorithm could not solve these points.");
+            fittedSegments = result.segments;
+            metrics.segments.textContent = result.segment_count;
+            metrics.error.textContent = result.total_squared_error.toFixed(4);
+            metrics.objective.textContent = result.objective.toFixed(4);
+            metrics.time.textContent = `${result.execution_time_ms.toFixed(3)} ms`;
+            setStatus("Solved.");
+            render();
+        } catch (error) {
+            setStatus(error.message, true);
+        } finally {
+            solveButton.disabled = false;
+        }
+    });
+
+    render();
+})();
+</script>
+{% endblock %}
