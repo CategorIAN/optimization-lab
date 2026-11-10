@@ -41,3 +41,39 @@ class SegmentedLeastSquaresViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
+
+
+class GreedySetCoverViewsTests(TestCase):
+    def test_page_loads(self):
+        response = self.client.get(reverse("visualizations:greedy_set_cover"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Generate new diagram")
+        self.assertContains(response, "pointInside")
+
+    def test_solve_endpoint_uses_existing_greedy_selection_order(self):
+        response = self.client.post(
+            reverse("visualizations:solve_greedy_set_cover"),
+            data=json.dumps({
+                "collection": {
+                    "S1": ["e1", "e2"],
+                    "S2": ["e2", "e3"],
+                    "S3": ["e3"],
+                },
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["selected_subsets"], ["S1", "S2"])
+        self.assertEqual(response.json()["element_count"], 3)
+
+    def test_solve_endpoint_handles_empty_collection(self):
+        response = self.client.post(
+            reverse("visualizations:solve_greedy_set_cover"),
+            data=json.dumps({"collection": {}}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["selected_subsets"], [])

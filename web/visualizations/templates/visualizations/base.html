@@ -495,6 +495,8 @@
         <nav class="sidebar" aria-label="Primary navigation">
             <a class="nav-link{% if request.resolver_match.url_name == 'segmented_least_squares' %} is-active{% endif %}"
                href="{% url 'visualizations:segmented_least_squares' %}">Segmented Least Squares</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'greedy_set_cover' %} is-active{% endif %}"
+               href="{% url 'visualizations:greedy_set_cover' %}">Greedy Set Cover</a>
         </nav>
         {% endif %}
 

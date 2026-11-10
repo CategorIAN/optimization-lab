@@ -1,0 +1,221 @@
+{% extends "visualizations/base.html" %}
+
+{% block title %}Greedy Set Cover | Optimization Lab{% endblock %}
+
+{% block extra_head %}
+<style>
+    .set-cover-demo { max-width: 1100px; margin: 0 auto; }
+    .set-cover-intro { max-width: 75ch; line-height: 1.5; }
+    .set-cover-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .set-cover-controls button { padding: 0.5rem 0.8rem; border: 1px solid #555; background: #f2f2f2; color: #222; cursor: pointer; }
+    .set-cover-controls button:hover:not(:disabled) { background: #e1e1e1; }
+    .set-cover-controls button:disabled { cursor: not-allowed; opacity: 0.6; }
+    .set-cover-layout { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 1.5rem; align-items: start; }
+    .set-cover-plot, .set-cover-summary { padding: 1rem; border: 1px solid #b9b9b9; background: #f7f7f7; }
+    #set-cover-svg { display: block; width: 100%; height: auto; background: #fff; }
+    .subset-shape { transition: opacity 0.2s, stroke-width 0.2s, fill 0.2s; }
+    .subset-shape.is-selected { fill: #f28e2b; fill-opacity: 0.38; stroke: #ba5700; stroke-width: 4; }
+    .subset-shape.is-faded { opacity: 0.16; }
+    .element-dot { fill: #205493; stroke: #fff; stroke-width: 1.5; }
+    .element-dot.is-covered { fill: #228b22; }
+    .element-label { font-size: 13px; font-weight: 700; fill: #1f2937; pointer-events: none; }
+    .set-cover-summary h2 { margin-top: 0; }
+    .set-cover-summary dl { margin: 0; }
+    .set-cover-summary dt { margin-top: 0.85rem; font-size: 0.85rem; font-weight: 700; }
+    .set-cover-summary dd { margin: 0.25rem 0 0; line-height: 1.45; }
+    #set-cover-status { min-height: 1.5rem; margin: 0.75rem 0 0; }
+    #set-cover-status.error { color: #a40000; }
+    @media (max-width: 800px) { .set-cover-layout { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="set-cover-demo">
+    <h1>Greedy Set Cover</h1>
+    <p class="set-cover-intro">Each translucent shape is a subset. The dots are the elements it contains. Step through the greedy algorithm to see which subset adds the most uncovered elements at each choice.</p>
+    <div class="set-cover-controls">
+        <button id="generate-diagram" type="button">Generate new diagram</button>
+        <button id="next-step" type="button">Next step</button>
+        <button id="show-covering" type="button">Show covering</button>
+        <button id="reset-covering" type="button">Reset</button>
+    </div>
+    <div class="set-cover-layout">
+        <div class="set-cover-plot">
+            <svg id="set-cover-svg" viewBox="0 0 720 500" role="img" aria-label="Overlapping subsets and their elements"></svg>
+            <p id="set-cover-status" role="status" aria-live="polite"></p>
+        </div>
+        <aside class="set-cover-summary" aria-live="polite">
+            <h2>Greedy selection</h2>
+            <dl>
+                <dt>Selected subsets</dt><dd id="selected-subsets">None</dd>
+                <dt>Coverage</dt><dd id="coverage-count">0 / 0 elements</dd>
+                <dt>Latest step</dt><dd id="step-detail">Generate a diagram to begin.</dd>
+            </dl>
+        </aside>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(() => {
+    const svg = document.getElementById("set-cover-svg");
+    const generateButton = document.getElementById("generate-diagram");
+    const nextButton = document.getElementById("next-step");
+    const showButton = document.getElementById("show-covering");
+    const resetButton = document.getElementById("reset-covering");
+    const status = document.getElementById("set-cover-status");
+    const selectedSubsets = document.getElementById("selected-subsets");
+    const coverageCount = document.getElementById("coverage-count");
+    const stepDetail = document.getElementById("step-detail");
+    const colors = ["#4e79a7", "#59a14f", "#e15759", "#b07aa1", "#76b7b2"];
+    const width = 720;
+    const height = 500;
+    let instance = null;
+    let greedyOrder = [];
+    let selectedCount = 0;
+    let latestStep = "";
+
+    function pointInside(point, shape) {
+        const angle = (-shape.rotation * Math.PI) / 180;
+        const dx = point.x - shape.cx;
+        const dy = point.y - shape.cy;
+        const localX = Math.cos(angle) * dx - Math.sin(angle) * dy;
+        const localY = Math.sin(angle) * dx + Math.cos(angle) * dy;
+        return (localX ** 2 / shape.rx ** 2) + (localY ** 2 / shape.ry ** 2) <= 1;
+    }
+    const random = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
+
+    function setStatus(message = "", isError = false) {
+        status.textContent = message;
+        status.classList.toggle("error", isError);
+    }
+
+    function buildInstance() {
+        const shapes = Array.from({ length: 5 }, (_, index) => ({
+            id: `S${index + 1}`,
+            cx: random(190, 535),
+            cy: random(140, 355),
+            rx: random(110, 165),
+            ry: random(75, 120),
+            rotation: random(-28, 28),
+            color: colors[index],
+        }));
+        const elements = Array.from({ length: 13 }, (_, index) => {
+            const containingShape = shapes[Math.floor(Math.random() * shapes.length)];
+            const angle = random(0, Math.PI * 2);
+            const radius = Math.sqrt(Math.random()) * 0.78;
+            const rotation = (containingShape.rotation * Math.PI) / 180;
+            const localX = Math.cos(angle) * containingShape.rx * radius;
+            const localY = Math.sin(angle) * containingShape.ry * radius;
+            return {
+                id: `e${index + 1}`,
+                x: containingShape.cx + Math.cos(rotation) * localX - Math.sin(rotation) * localY,
+                y: containingShape.cy + Math.sin(rotation) * localX + Math.cos(rotation) * localY,
+            };
+        });
+        const collection = Object.fromEntries(shapes.map(shape => [shape.id, elements.filter(element => pointInside(element, shape)).map(element => element.id)]));
+        return { shapes, elements, collection };
+    }
+
+    function selectedIds() { return greedyOrder.slice(0, selectedCount); }
+
+    function coveredElementIds() {
+        const covered = new Set();
+        selectedIds().forEach(id => (instance.collection[id] || []).forEach(element => covered.add(element)));
+        return covered;
+    }
+
+    function render() {
+        if (!instance) return;
+        const selected = new Set(selectedIds());
+        const covered = coveredElementIds();
+        const complete = selectedCount >= greedyOrder.length;
+        const shapes = instance.shapes.map(shape => {
+            const classes = ["subset-shape"];
+            if (selected.has(shape.id)) classes.push("is-selected");
+            if (complete && !selected.has(shape.id)) classes.push("is-faded");
+            return `<ellipse class="${classes.join(" ")}" cx="${shape.cx}" cy="${shape.cy}" rx="${shape.rx}" ry="${shape.ry}" fill="${shape.color}" fill-opacity="0.28" stroke="${shape.color}" stroke-width="2" transform="rotate(${shape.rotation} ${shape.cx} ${shape.cy})"><title>${shape.id}: ${(instance.collection[shape.id] || []).join(", ") || "no elements"}</title></ellipse>`;
+        }).join("");
+        const dots = instance.elements.map(element => `<circle class="element-dot${covered.has(element.id) ? " is-covered" : ""}" cx="${element.x}" cy="${element.y}" r="7" /><text class="element-label" x="${element.x + 9}" y="${element.y - 9}">${element.id}</text>`).join("");
+        svg.innerHTML = `${shapes}${dots}`;
+        selectedSubsets.textContent = selected.size ? [...selected].join(", ") : "None";
+        coverageCount.textContent = `${covered.size} / ${instance.elements.length} elements`;
+        stepDetail.textContent = latestStep || (instance.elements.length ? "Ready to select a subset." : "This instance has no elements.");
+        const isComplete = complete || instance.elements.length === 0;
+        nextButton.disabled = isComplete;
+        showButton.disabled = isComplete;
+        resetButton.disabled = selectedCount === 0;
+    }
+
+    async function calculateGreedyOrder() {
+        const response = await fetch("{% url 'visualizations:solve_greedy_set_cover' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1] || "" },
+            body: JSON.stringify({ collection: instance.collection }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to solve this instance.");
+        greedyOrder = result.selected_subsets;
+    }
+
+    async function generateDiagram() {
+        instance = buildInstance();
+        greedyOrder = [];
+        selectedCount = 0;
+        latestStep = "Calculating the greedy covering…";
+        generateButton.disabled = true;
+        nextButton.disabled = true;
+        showButton.disabled = true;
+        setStatus("Generating a new diagram…");
+        render();
+        try {
+            await calculateGreedyOrder();
+            latestStep = instance.elements.length ? "Ready to select a subset." : "This instance has no elements.";
+            setStatus("Diagram ready.");
+        } catch (error) {
+            latestStep = "No covering is available.";
+            setStatus(error.message, true);
+        } finally {
+            generateButton.disabled = false;
+            render();
+        }
+    }
+
+    function takeNextStep() {
+        if (selectedCount >= greedyOrder.length) return;
+        const subsetId = greedyOrder[selectedCount];
+        const before = coveredElementIds();
+        const newlyCovered = (instance.collection[subsetId] || []).filter(element => !before.has(element));
+        selectedCount += 1;
+        latestStep = `${subsetId} adds ${newlyCovered.length} newly covered ${newlyCovered.length === 1 ? "element" : "elements"}.`;
+        if (selectedCount === greedyOrder.length) latestStep += " Covering complete.";
+        setStatus("");
+        render();
+    }
+
+    function showCovering() {
+        if (!greedyOrder.length) return;
+        const before = coveredElementIds();
+        const remaining = greedyOrder.slice(selectedCount).flatMap(id => instance.collection[id] || []).filter(element => !before.has(element));
+        selectedCount = greedyOrder.length;
+        latestStep = `Showing the complete covering; ${new Set(remaining).size} remaining elements were covered.`;
+        setStatus("");
+        render();
+    }
+
+    function reset() {
+        selectedCount = 0;
+        latestStep = instance.elements.length ? "Selection reset. Ready to select a subset." : "This instance has no elements.";
+        setStatus("");
+        render();
+    }
+
+    generateButton.addEventListener("click", generateDiagram);
+    nextButton.addEventListener("click", takeNextStep);
+    showButton.addEventListener("click", showCovering);
+    resetButton.addEventListener("click", reset);
+    generateDiagram();
+})();
+</script>
+{% endblock %}

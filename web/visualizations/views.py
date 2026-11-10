@@ -13,6 +13,7 @@ from dynamic_programming.segmented_least_squares import (
     least_squares_error,
     segmented_least_squares,
 )
+from greedy.set_cover import greedy_set_cover
 
 MAX_POINTS = 200
 
@@ -104,4 +105,45 @@ def solve_segmented_least_squares(request):
         "total_squared_error": total_squared_error,
         "objective": objective,
         "execution_time_ms": execution_time_ms,
+    })
+
+
+@ensure_csrf_cookie
+def greedy_set_cover_page(request):
+    """Render the interactive greedy set cover demonstration."""
+    return render(request, "visualizations/greedy_set_cover.html")
+
+
+@require_POST
+def solve_greedy_set_cover(request):
+    """Run the existing greedy set cover function for a browser-generated collection."""
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _invalid_request("Request body must be valid JSON.")
+
+    collection = payload.get("collection") if isinstance(payload, dict) else None
+    if not isinstance(collection, dict):
+        return _invalid_request("Collection must be an object mapping subset IDs to element lists.")
+    if len(collection) > 20:
+        return _invalid_request("At most 20 subsets are allowed.")
+
+    parsed_collection = {}
+    all_elements = set()
+    for subset_id, elements in collection.items():
+        if not isinstance(subset_id, str) or not subset_id:
+            return _invalid_request("Subset IDs must be non-empty strings.")
+        if not isinstance(elements, list) or not all(isinstance(element, str) for element in elements):
+            return _invalid_request("Each subset must contain a list of element IDs.")
+        parsed_collection[subset_id] = set(elements)
+        all_elements.update(elements)
+
+    try:
+        selected_subsets = greedy_set_cover(parsed_collection)
+    except (TypeError, ValueError) as error:
+        return _invalid_request(str(error))
+
+    return JsonResponse({
+        "selected_subsets": selected_subsets,
+        "element_count": len(all_elements),
     })
