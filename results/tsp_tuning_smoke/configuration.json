@@ -1,0 +1,24 @@
+{
+  "output_dir": "results\\tsp_tuning_smoke",
+  "seed": 2026,
+  "candidates": 2,
+  "train_graphs": 3,
+  "validation_graphs": 2,
+  "test_graphs": 2,
+  "cities": 4,
+  "repeat_seeds": 2,
+  "top_candidates": 1,
+  "smoke": true,
+  "fixed_hyperparameters": {
+    "p": 1,
+    "T": 1,
+    "n": 1,
+    "beta": 1,
+    "gamma": 1
+  },
+  "search_ranges": {
+    "alpha": "log-uniform [1e-4, 1e-1]",
+    "eps": "uniform [0.0, 0.30]"
+  },
+  "evaluation": "Greedy policy only (exploreOption=False); no theta updates."
+}

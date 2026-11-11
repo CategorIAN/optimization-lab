@@ -38,6 +38,12 @@ class TestTSPRL(unittest.TestCase):
             [1, 0, 1],
         )
 
+    def test_relu_is_elementwise_numpy_maximum(self):
+        np.testing.assert_allclose(
+            self.model.relu(np.array([-1.0, 0.75])),
+            [0.0, 0.75],
+        )
+
     def test_reward_is_change_in_negative_tour_length(self):
         # [0, 1] closes to 0 → 1 → 0: distance 4.
         # [0, 1, 2] closes to 0 → 1 → 2 → 0: distance 9.
@@ -116,6 +122,41 @@ class TestTSPRL(unittest.TestCase):
         )
 
         self.assertEqual(sorted(tour), self.graph.vertices)
+
+    def test_episode_records_updated_one_step_transitions(self):
+        model = TSP_RL(
+            p=1, T=1, eps=0, n=1, alpha=0, beta=1, gamma=1,
+        )
+        order = [0, 1, 2]
+        model.updated_S = lambda Theta, G, exploreOption=True: (  # noqa: E731
+            lambda S: S + [order[len(S)]]
+        )
+
+        _, memory, tour = model.episode(self.theta, [], self.graph)
+
+        self.assertEqual(tour, order)
+        self.assertEqual(len(memory), 3)
+        self.assertEqual(memory[0][1:], ([], 0, 0.0, [0]))
+        self.assertEqual(memory[1][1:], ([0], 1, -4, [0, 1]))
+        self.assertEqual(memory[2][1:], ([0, 1], 2, -5, [0, 1, 2]))
+        self.assertEqual(model.QBest(self.theta, self.graph, memory[-1][-1]), 0)
+
+    def test_episode_records_full_two_step_windows_including_terminal_city(self):
+        model = TSP_RL(
+            p=1, T=1, eps=0, n=2, alpha=0, beta=1, gamma=1,
+        )
+        order = [0, 1, 2]
+        model.updated_S = lambda Theta, G, exploreOption=True: (  # noqa: E731
+            lambda S: S + [order[len(S)]]
+        )
+
+        _, memory, tour = model.episode(self.theta, [], self.graph)
+
+        self.assertEqual(tour, order)
+        self.assertEqual(len(memory), 2)
+        self.assertEqual(memory[0][1:], ([], 0, -4.0, [0, 1]))
+        self.assertEqual(memory[1][1:], ([0], 1, -9, [0, 1, 2]))
+        self.assertEqual(model.QBest(self.theta, self.graph, memory[-1][-1]), 0)
 
 
 if __name__ == "__main__":

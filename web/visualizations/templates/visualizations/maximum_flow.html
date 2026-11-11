@@ -1,0 +1,90 @@
+{% extends "visualizations/base.html" %}
+
+{% block title %}Maximum Flow | Optimization Lab{% endblock %}
+
+{% block extra_head %}
+<style>
+    .flow-demo { max-width: 1180px; margin: 0 auto; }
+    .flow-intro { max-width: 76ch; line-height: 1.5; }
+    .flow-controls, .flow-editor { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin: 1rem 0; }
+    .flow-controls button, .flow-editor button, .flow-editor select, .flow-editor input { padding: .45rem .7rem; border: 1px solid #666; background: #f4f4f4; color: #222; }
+    .flow-controls button, .flow-editor button { cursor: pointer; }
+    .flow-controls button:disabled, .flow-editor button:disabled { opacity: .55; cursor: not-allowed; }
+    .flow-controls button.is-active { background: #1f2937; color: #fff; }
+    .flow-layout { display: grid; grid-template-columns: minmax(0, 1fr) 285px; gap: 1.25rem; align-items: start; }
+    .flow-plot, .flow-summary, .edge-editor { border: 1px solid #b9b9b9; padding: 1rem; background: #f7f7f7; }
+    #flow-svg { display: block; width: 100%; height: auto; background: #fff; touch-action: none; }
+    .flow-edge { fill: none; stroke: #68707a; stroke-width: 2.5; }
+    .flow-edge.is-path { stroke: #d14900; stroke-width: 5; }
+    .residual-edge { fill: none; stroke: #8756a8; stroke-width: 1.5; stroke-dasharray: 5 4; opacity: .75; }
+    .edge-label { font-size: 13px; font-weight: 700; fill: #1f2937; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    .residual-label { font-size: 11px; fill: #6d3d91; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+    .flow-node { fill: #e8edf3; stroke: #34495e; stroke-width: 2.5; cursor: grab; }
+    .flow-node.source { fill: #c8e6c9; stroke: #25733a; }
+    .flow-node.sink { fill: #f8d0cf; stroke: #a42e28; }
+    .node-label { font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .flow-summary h2, .edge-editor h2 { margin-top: 0; }
+    .flow-summary dt { margin-top: .75rem; font-size: .84rem; font-weight: 700; }
+    .flow-summary dd { margin: .25rem 0 0; line-height: 1.45; }
+    .edge-editor { margin-top: 1.25rem; }
+    .edge-table { width: 100%; border-collapse: collapse; background: #fff; }
+    .edge-table th, .edge-table td { padding: .45rem; border: 1px solid #ccc; text-align: left; }
+    .edge-table input { width: 5rem; }
+    #flow-status { min-height: 1.5rem; margin: .75rem 0 0; }
+    #flow-status.error { color: #a40000; }
+    @media (max-width: 850px) { .flow-layout { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="flow-demo">
+    <h1>Maximum Flow</h1>
+    <p class="flow-intro">Follow Ford–Fulkerson one residual augmenting path at a time. Solid arrows show original edges as <em>flow / capacity</em>; dashed purple arrows show the aggregated residual network.</p>
+    <div class="flow-controls">
+        <label>Strategy <select id="flow-strategy"><option value="bfs">BFS (Edmonds–Karp)</option><option value="dfs">DFS (Ford–Fulkerson)</option></select></label>
+        <button id="flow-next" type="button">Next step</button><button id="flow-show" type="button">Show solution</button><button id="flow-reset" type="button">Reset</button><button id="flow-generate" type="button">Generate new graph</button>
+        <label><input id="show-residual" type="checkbox" checked> Show residual network</label>
+        <button id="add-node" type="button" aria-pressed="false">Add node</button>
+    </div>
+    <div class="flow-editor">
+        <strong>Add edge</strong><label>From <select id="edge-source"></select></label><label>To <select id="edge-target"></select></label><label>Capacity <input id="edge-capacity" type="number" min="0" max="100" value="1"></label><button id="add-edge" type="button">Add edge</button>
+        <label>Source <select id="source-node"></select></label><label>Sink <select id="sink-node"></select></label><button id="set-terminals" type="button">Set source/sink</button>
+    </div>
+    <div class="flow-layout">
+        <div class="flow-plot"><svg id="flow-svg" viewBox="0 0 760 480" role="img" aria-label="Editable directed flow network"></svg><p id="flow-status" role="status" aria-live="polite"></p></div>
+        <aside class="flow-summary" aria-live="polite"><h2>Augmentation</h2><dl><dt>Flow value</dt><dd id="flow-value">0</dd><dt>Completed augmentations</dt><dd id="flow-count">0</dd><dt>Current path</dt><dd id="flow-path">—</dd><dt>Bottleneck</dt><dd id="flow-bottleneck">—</dd><dt>Update</dt><dd id="flow-update">Choose Next step to preview an augmenting path.</dd></dl></aside>
+    </div>
+    <section class="edge-editor"><h2>Edge capacities</h2><table class="edge-table"><thead><tr><th>Edge</th><th>Capacity</th><th></th></tr></thead><tbody id="edge-list"></tbody></table></section>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(() => {
+    const svg = document.getElementById("flow-svg"), strategy = document.getElementById("flow-strategy"), next = document.getElementById("flow-next"), show = document.getElementById("flow-show"), reset = document.getElementById("flow-reset"), generate = document.getElementById("flow-generate"), residualToggle = document.getElementById("show-residual"), addNode = document.getElementById("add-node"), edgeSource = document.getElementById("edge-source"), edgeTarget = document.getElementById("edge-target"), edgeCapacity = document.getElementById("edge-capacity"), addEdge = document.getElementById("add-edge"), sourceSelect = document.getElementById("source-node"), sinkSelect = document.getElementById("sink-node"), setTerminals = document.getElementById("set-terminals"), edgeList = document.getElementById("edge-list"), status = document.getElementById("flow-status");
+    const output = { value: document.getElementById("flow-value"), count: document.getElementById("flow-count"), path: document.getElementById("flow-path"), bottleneck: document.getElementById("flow-bottleneck"), update: document.getElementById("flow-update") };
+    const W=760,H=480,R=23; let graph, trace=null, stepIndex=0, preview=false, addNodeMode=false, dragging=null, busy=false;
+    const sample = () => ({ nodes:[{id:"s",x:95,y:240},{id:"a",x:275,y:120},{id:"b",x:275,y:350},{id:"c",x:465,y:235},{id:"t",x:660,y:240}], edges:[{source:"s",target:"a",value:4},{source:"s",target:"b",value:3},{source:"a",target:"b",value:2},{source:"b",target:"a",value:1},{source:"a",target:"c",value:3},{source:"b",target:"c",value:3},{source:"c",target:"t",value:6},{source:"a",target:"t",value:1}], source:"s",sink:"t" });
+    const randomGraph = () => ({ nodes:[{id:"s",x:90,y:240},{id:"n1",x:265,y:115},{id:"n2",x:265,y:350},{id:"n3",x:470,y:240},{id:"t",x:665,y:240}], edges:[{source:"s",target:"n1",value:2+Math.floor(Math.random()*5)},{source:"s",target:"n2",value:2+Math.floor(Math.random()*5)},{source:"n1",target:"n3",value:1+Math.floor(Math.random()*5)},{source:"n2",target:"n3",value:1+Math.floor(Math.random()*5)},{source:"n3",target:"t",value:3+Math.floor(Math.random()*6)},{source:"n2",target:"n1",value:1+Math.floor(Math.random()*3)}], source:"s",sink:"t" });
+    const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+    function clientPoint(e){const m=svg.getScreenCTM();if(!m)return null;const p=new DOMPoint(e.clientX,e.clientY);return p.matrixTransform(m.inverse());}
+    function setStatus(message="", error=false){status.textContent=message;status.classList.toggle("error",error)}
+    function flowMap(records){return new Map((records||[]).map(e=>[`${e.source}\u0000${e.target}`,e.value]));}
+    function currentState(){if(!trace)return {flow:[],residual:[],value:0};if(stepIndex===0)return {flow:trace.initial.flow,residual:trace.initial.residual,value:trace.initial.flow_value};const s=trace.steps[stepIndex-1];return {flow:s.flow_after,residual:s.residual_after,value:s.flow_value_after};}
+    function selectOptions(){const options=graph.nodes.map(n=>`<option value="${esc(n.id)}">${esc(n.id)}</option>`).join("");[edgeSource,edgeTarget,sourceSelect,sinkSelect].forEach(el=>el.innerHTML=options);sourceSelect.value=graph.source;sinkSelect.value=graph.sink;edgeSource.value=graph.source;edgeTarget.value=graph.sink;}
+    function edgePath(a,b){const reverse=graph.edges.some(e=>e.source===b.id&&e.target===a.id);const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,offset=reverse?(a.id<b.id?28:-28):0;const sx=a.x+ux*R,sy=a.y+uy*R,ex=b.x-ux*R,ey=b.y-uy*R;if(!offset)return {d:`M ${sx} ${sy} L ${ex} ${ey}`,x:(sx+ex)/2,y:(sy+ey)/2};const mx=(sx+ex)/2-uy*offset,my=(sy+ey)/2+ux*offset;return {d:`M ${sx} ${sy} Q ${mx} ${my} ${ex} ${ey}`,x:mx,y:my};}
+    function render(){if(!graph)return;selectOptions();const state=currentState(), flows=flowMap(state.flow), residual=state.residual||[], active=preview&&trace?.steps[stepIndex]?trace.steps[stepIndex].path:[], pathEdges=new Set(active.slice(1).map((v,i)=>`${active[i]}\u0000${v}`));const nodes=new Map(graph.nodes.map(n=>[n.id,n]));let markup=`<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#68707a"/></marker><marker id="path-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#d14900"/></marker></defs>`;
+      if(residualToggle.checked){markup+=residual.map(e=>{const a=nodes.get(e.source),b=nodes.get(e.target);if(!a||!b)return"";const p=edgePath(a,b);return `<path class="residual-edge" d="${p.d}"/><text class="residual-label" x="${p.x}" y="${p.y-11}" text-anchor="middle">r:${e.value}</text>`}).join("")}
+      markup+=graph.edges.map(e=>{const a=nodes.get(e.source),b=nodes.get(e.target),p=edgePath(a,b),key=`${e.source}\u0000${e.target}`,hot=pathEdges.has(key),flow=flows.get(key)||0;return `<path class="flow-edge${hot?" is-path":""}" d="${p.d}" marker-end="url(#${hot?"path-arrow":"arrow"})"/><text class="edge-label" x="${p.x}" y="${p.y+5}" text-anchor="middle">${flow} / ${e.value}</text>`}).join("");
+      markup+=graph.nodes.map(n=>`<circle class="flow-node${n.id===graph.source?" source":""}${n.id===graph.sink?" sink":""}" data-node="${esc(n.id)}" cx="${n.x}" cy="${n.y}" r="${R}"/><text class="node-label" x="${n.x}" y="${n.y}">${esc(n.id)}</text>`).join("");svg.innerHTML=markup;
+      output.value.textContent=state.value;output.count.textContent=stepIndex;const step=trace?.steps[stepIndex];output.path.textContent=preview&&step?step.path.join(" → "):"—";output.bottleneck.textContent=preview&&step?step.bottleneck:"—";output.update.textContent=preview&&step?step.operations.map(o=>o.type==="increase"?`increase ${o.source}→${o.target} by ${o.value}`:`cancel ${o.source}→${o.target} by ${o.value}`).join("; "):(trace&&stepIndex===trace.steps.length?`Complete. Maximum flow is ${trace.maximum_flow}.`:"Choose Next step to preview an augmenting path.");const complete=!trace||stepIndex>=trace.steps.length;next.disabled=busy||complete;show.disabled=busy||complete;reset.disabled=busy||stepIndex===0&&!preview;addNode.disabled=busy;edgeList.innerHTML=graph.edges.map((e,i)=>`<tr><td>${esc(e.source)} → ${esc(e.target)}</td><td><input data-capacity="${i}" type="number" min="0" max="100" value="${e.value}"></td><td><button data-delete="${i}" type="button">Remove</button></td></tr>`).join("");}
+    async function retrace(message=""){busy=true;trace=null;stepIndex=0;preview=false;render();try{const r=await fetch("{% url 'visualizations:trace_maximum_flow' %}",{method:"POST",headers:{"Content-Type":"application/json","X-CSRFToken":document.cookie.split("; ").find(v=>v.startsWith("csrftoken="))?.split("=")[1]||""},body:JSON.stringify({nodes:graph.nodes.map(n=>n.id),edges:graph.edges,source:graph.source,sink:graph.sink,strategy:strategy.value})});const data=await r.json();if(!r.ok)throw Error(data.error||"Unable to trace this graph.");trace=data;setStatus(message||"Trace ready.")}catch(e){setStatus(e.message,true)}finally{busy=false;render()}}
+    function uniqueNodeId(){let i=1;while(graph.nodes.some(n=>n.id===`v${i}`))i++;return `v${i}`}
+    next.addEventListener("click",()=>{if(!preview){preview=true;setStatus("Previewing the next residual augmenting path.")}else{preview=false;stepIndex++;setStatus(stepIndex===trace.steps.length?`Complete: maximum flow ${trace.maximum_flow}.`:"Augmentation applied.")}render()});show.addEventListener("click",()=>{stepIndex=trace.steps.length;preview=false;setStatus(`Complete: maximum flow ${trace.maximum_flow}.`);render()});reset.addEventListener("click",()=>{stepIndex=0;preview=false;setStatus("Flow reset to zero.");render()});generate.addEventListener("click",()=>{graph=randomGraph();retrace("New graph generated.")});strategy.addEventListener("change",()=>retrace("Strategy changed; flow reset."));residualToggle.addEventListener("change",render);addNode.addEventListener("click",()=>{addNodeMode=!addNodeMode;addNode.classList.toggle("is-active",addNodeMode);addNode.setAttribute("aria-pressed",String(addNodeMode));svg.style.cursor=addNodeMode?"crosshair":"default";setStatus(addNodeMode?"Add node mode: click empty canvas.":"")});
+    addEdge.addEventListener("click",()=>{const source=edgeSource.value,target=edgeTarget.value,value=Number(edgeCapacity.value);if(source===target){setStatus("An edge cannot be a self-loop.",true);return}if(!Number.isInteger(value)||value<0||value>100){setStatus("Capacity must be an integer from 0 to 100.",true);return}if(graph.edges.some(e=>e.source===source&&e.target===target)){setStatus("That directed edge already exists.",true);return}graph.edges.push({source,target,value});retrace("Edge added; flow reset.")});setTerminals.addEventListener("click",()=>{if(sourceSelect.value===sinkSelect.value){setStatus("Source and sink must differ.",true);return}graph.source=sourceSelect.value;graph.sink=sinkSelect.value;retrace("Source and sink changed; flow reset.")});
+    edgeList.addEventListener("change",e=>{const i=e.target.dataset.capacity;if(i===undefined)return;const value=Number(e.target.value);if(!Number.isInteger(value)||value<0||value>100){setStatus("Capacity must be an integer from 0 to 100.",true);render();return}graph.edges[Number(i)].value=value;retrace("Capacity changed; flow reset.")});edgeList.addEventListener("click",e=>{const i=e.target.dataset.delete;if(i===undefined)return;graph.edges.splice(Number(i),1);retrace("Edge removed; flow reset.")});
+    svg.addEventListener("pointerdown",e=>{const id=e.target.dataset.node;if(id){dragging=id;svg.setPointerCapture(e.pointerId);return}if(!addNodeMode||busy)return;const p=clientPoint(e);if(!p||p.x<0||p.y<0||p.x>W||p.y>H)return;graph.nodes.push({id:uniqueNodeId(),x:p.x,y:p.y});addNodeMode=false;addNode.classList.remove("is-active");svg.style.cursor="default";retrace("Node added; flow reset.")});svg.addEventListener("pointermove",e=>{if(!dragging)return;const p=clientPoint(e),n=graph.nodes.find(n=>n.id===dragging);if(!p||!n)return;n.x=Math.max(R,Math.min(W-R,p.x));n.y=Math.max(R,Math.min(H-R,p.y));render()});svg.addEventListener("pointerup",e=>{if(dragging&&svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);dragging=null});
+    graph=sample();retrace();
+})();
+</script>
+{% endblock %}

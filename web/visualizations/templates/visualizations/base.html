@@ -497,6 +497,10 @@
                href="{% url 'visualizations:segmented_least_squares' %}">Segmented Least Squares</a>
             <a class="nav-link{% if request.resolver_match.url_name == 'greedy_set_cover' %} is-active{% endif %}"
                href="{% url 'visualizations:greedy_set_cover' %}">Greedy Set Cover</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'maximum_flow' %} is-active{% endif %}"
+               href="{% url 'visualizations:maximum_flow' %}">Maximum Flow</a>
+            <a class="nav-link{% if request.resolver_match.url_name == 'traveling_salesman' %} is-active{% endif %}"
+               href="{% url 'visualizations:traveling_salesman' %}">Traveling Salesman</a>
         </nav>
         {% endif %}
 

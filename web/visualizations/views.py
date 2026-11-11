@@ -14,8 +14,14 @@ from dynamic_programming.segmented_least_squares import (
     segmented_least_squares,
 )
 from greedy.set_cover import greedy_set_cover
+from .max_flow_trace import maximum_flow_trace
+from .tsp_solver import solve_tsp
 
 MAX_POINTS = 200
+MAX_FLOW_NODES = 12
+MAX_FLOW_EDGES = 36
+MAX_FLOW_CAPACITY = 100
+MAX_TSP_CITIES = 9
 
 
 @ensure_csrf_cookie
@@ -147,3 +153,82 @@ def solve_greedy_set_cover(request):
         "selected_subsets": selected_subsets,
         "element_count": len(all_elements),
     })
+
+
+@ensure_csrf_cookie
+def maximum_flow_page(request):
+    return render(request, "visualizations/maximum_flow.html")
+
+
+@require_POST
+def trace_maximum_flow(request):
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _invalid_request("Request body must be valid JSON.")
+
+    nodes = payload.get("nodes") if isinstance(payload, dict) else None
+    edges = payload.get("edges") if isinstance(payload, dict) else None
+    source = payload.get("source") if isinstance(payload, dict) else None
+    sink = payload.get("sink") if isinstance(payload, dict) else None
+    strategy = payload.get("strategy") if isinstance(payload, dict) else None
+    if not isinstance(nodes, list) or not all(isinstance(node, str) and node for node in nodes):
+        return _invalid_request("Nodes must be non-empty string IDs.")
+    if len(nodes) > MAX_FLOW_NODES or len(set(nodes)) != len(nodes):
+        return _invalid_request(f"Use at most {MAX_FLOW_NODES} unique nodes.")
+    if source not in nodes or sink not in nodes or source == sink:
+        return _invalid_request("Source and sink must be distinct existing nodes.")
+    if strategy not in {"bfs", "dfs"}:
+        return _invalid_request("Strategy must be 'bfs' or 'dfs'.")
+    if not isinstance(edges, list) or len(edges) > MAX_FLOW_EDGES:
+        return _invalid_request(f"Use at most {MAX_FLOW_EDGES} edges.")
+
+    capacity = {}
+    for edge in edges:
+        if not isinstance(edge, dict):
+            return _invalid_request("Each edge must be an object.")
+        start, end, value = edge.get("source"), edge.get("target"), edge.get("value")
+        if start not in nodes or end not in nodes or start == end:
+            return _invalid_request("Edges must connect distinct existing nodes.")
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_FLOW_CAPACITY:
+            return _invalid_request(f"Capacities must be integers from 0 to {MAX_FLOW_CAPACITY}.")
+        if (start, end) in capacity:
+            return _invalid_request("Duplicate directed edges are not allowed.")
+        capacity[(start, end)] = value
+
+    try:
+        return JsonResponse(maximum_flow_trace(capacity, source, sink, strategy))
+    except ValueError as error:
+        return _invalid_request(str(error))
+
+
+@ensure_csrf_cookie
+def traveling_salesman_page(request):
+    return render(request, "visualizations/traveling_salesman.html", {"max_cities": MAX_TSP_CITIES})
+
+
+@require_POST
+def solve_traveling_salesman(request):
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _invalid_request("Request body must be valid JSON.")
+    points = payload.get("points") if isinstance(payload, dict) else None
+    checkpoint = payload.get("checkpoint") if isinstance(payload, dict) else None
+    if not isinstance(points, list) or not 2 <= len(points) <= MAX_TSP_CITIES:
+        return _invalid_request(f"Use between 2 and {MAX_TSP_CITIES} cities.")
+    parsed_points = []
+    for point in points:
+        if not isinstance(point, dict):
+            return _invalid_request("Each city must have x and y coordinates.")
+        try:
+            x, y = float(point["x"]), float(point["y"])
+        except (KeyError, TypeError, ValueError):
+            return _invalid_request("Each city must have numeric x and y coordinates.")
+        if not math.isfinite(x) or not math.isfinite(y):
+            return _invalid_request("City coordinates must be finite.")
+        parsed_points.append((x, y))
+    try:
+        return JsonResponse(solve_tsp(parsed_points, checkpoint=checkpoint))
+    except ValueError as error:
+        return _invalid_request(str(error))

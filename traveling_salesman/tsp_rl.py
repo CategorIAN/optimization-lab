@@ -67,7 +67,7 @@ class TSP_RL:
         :param v: vector
         :return: vector showing the element-wise relu values of v
         """
-        return np.vectorize(lambda i: max(0, i))(v)
+        return np.maximum(v, 0.0)
 
     # Structure2vec embeddings and Q-values
 
@@ -172,11 +172,17 @@ class TSP_RL:
     def R(self, C, t, n):
         """
         :param C: vector of accumulated costs
-        :param t: current time index
+        :param t: zero-based index of the first action in the reward window
         :param n: number of steps into the future
         :return: change in rewards from current time to n steps in the future
         """
-        return C[t + n - 1] - C[t - 1]
+        if t < 0 or n < 1 or t + n > len(C):
+            raise ValueError("Reward window is outside the accumulated cost history.")
+
+        # C contains the cost after each appended city.  Before the first
+        # action the tour is empty, whose cost is zero (not C[-1]).
+        cost_before_window = 0.0 if t == 0 else C[t - 1]
+        return C[t + n - 1] - cost_before_window
 
     def dRelu_dz(self, z):
         """
@@ -407,30 +413,32 @@ class TSP_RL:
 
         return f
 
-    def updated_M(self, G, S, C, t):
+    def updated_M(self, G, S, C):
         """
         :param G: graph
         :param S: list of unique vertices of graph
         :param C: list of accumulated costs S
-        :param t: current time index
         :return: function that updates memory list M
         """
 
         def f(M):
-            return (
-                M
-                + [
-                    (
-                        G,
-                        S[: (t - self.n)],
-                        S[t - self.n],
-                        self.R(C, t - self.n, self.n),
-                        S,
-                    )
-                ]
-                if t >= self.n
-                else M
-            )
+            if len(S) < self.n:
+                return M
+
+            # S and C already include the newly selected city.  This records
+            # a full n-step transition (state, first action, reward,
+            # successor); deliberately do not invent shorter reward windows
+            # at the end of a tour.
+            start = len(S) - self.n
+            return M + [
+                (
+                    G,
+                    S[:start],
+                    S[start],
+                    self.R(C, start, self.n),
+                    S.copy(),
+                )
+            ]
 
         return f
 
@@ -488,10 +496,10 @@ class TSP_RL:
             else:
                 S_new = self.updated_S(Theta, G)(S)
                 C_new = self.updated_C(G, S_new)(C)
-                t = len(S)
-                M_new = self.updated_M(G, S, C, t)(M)
-                Theta_new = self.updated_Theta(M_new, t)(Theta)
-                return QLearn_recurse(S_new, C_new, M_new, Theta_new, t + 1)
+                t_new = len(S_new)
+                M_new = self.updated_M(G, S_new, C_new)(M)
+                Theta_new = self.updated_Theta(M_new, t_new)(Theta)
+                return QLearn_recurse(S_new, C_new, M_new, Theta_new, t_new)
 
         return QLearn_recurse([], [], M, Theta, 0)
 
