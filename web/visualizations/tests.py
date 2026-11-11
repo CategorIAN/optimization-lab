@@ -50,6 +50,10 @@ class GreedySetCoverViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Generate new diagram")
         self.assertContains(response, "pointInside")
+        self.assertContains(response, "createSVGPoint")
+        self.assertContains(response, "getScreenCTM")
+        self.assertContains(response, "Add point")
+        self.assertContains(response, "Add set")
 
     def test_solve_endpoint_uses_existing_greedy_selection_order(self):
         response = self.client.post(
