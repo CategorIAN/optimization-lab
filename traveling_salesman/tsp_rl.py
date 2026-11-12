@@ -1,3 +1,4 @@
+from typing import Any
 import random
 from functools import reduce
 
@@ -9,7 +10,7 @@ from models.theta import ThetaObject, RandomThetaObject
 class TSP_RL:
     """Structure2vec action values with the original Q-learning updates."""
 
-    def __init__(self, p, T, eps, n, alpha, beta, gamma):
+    def __init__(self, p: Any, T: Any, eps: Any, n: Any, alpha: Any, beta: Any, gamma: Any) -> Any:
         """
         :param p: the dimension of the vertex embedding
         :param T: the number of hidden layers
@@ -29,7 +30,7 @@ class TSP_RL:
 
     # State, rewards, and activation functions
 
-    def filter(self, s, predicate):
+    def filter(self, s: Any, predicate: Any) -> Any:
         """
         :param s: list of values
         :param predicate: function to determine what to keep in the list
@@ -37,7 +38,7 @@ class TSP_RL:
         """
         return reduce(lambda v, i: v + [i] if predicate(i) else v, s, [])
 
-    def c(self, G, S):
+    def c(self, G: Any, S: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
@@ -45,7 +46,7 @@ class TSP_RL:
         """
         return -G.walkDistance(G.closeWalk(S))
 
-    def r(self, G, S, v):
+    def r(self, G: Any, S: Any, v: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
@@ -54,7 +55,7 @@ class TSP_RL:
         """
         return self.c(G, S + [v]) - self.c(G, S)
 
-    def x(self, G, S):
+    def x(self, G: Any, S: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
@@ -62,7 +63,7 @@ class TSP_RL:
         """
         return np.vectorize(lambda i: int(i in S))(G.vertices)
 
-    def relu(self, v):
+    def relu(self, v: Any) -> Any:
         """
         :param v: vector
         :return: vector showing the element-wise relu values of v
@@ -71,7 +72,7 @@ class TSP_RL:
 
     # Structure2vec embeddings and Q-values
 
-    def F(self, Theta, G, S):
+    def F(self, Theta: Any, G: Any, S: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -80,7 +81,15 @@ class TSP_RL:
         """
         x = self.x(G, S)
 
-        def new_mu_list(mu_list):
+        def new_mu_list(mu_list: Any) -> Any:
+            """Execute ``new_mu_list``.
+
+            Args:
+                mu_list: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             mu = mu_list[-1]
             r1 = np.outer(Theta.theta_1, x)
             r2 = Theta.theta_2 @ mu @ G.N
@@ -89,7 +98,7 @@ class TSP_RL:
 
         return new_mu_list
 
-    def mu_list_final(self, Theta, G, S):
+    def mu_list_final(self, Theta: Any, G: Any, S: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -102,7 +111,7 @@ class TSP_RL:
         )
         return mu_recurse([np.zeros((Theta.p, G.n))], 0)
 
-    def Q_vec_mu_list(self, Theta, G, S):
+    def Q_vec_mu_list(self, Theta: Any, G: Any, S: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -119,7 +128,7 @@ class TSP_RL:
 
     # Action selection
 
-    def S_not(self, G, S):
+    def S_not(self, G: Any, S: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
@@ -127,7 +136,7 @@ class TSP_RL:
         """
         return set(G.vertices).difference(S)
 
-    def policy(self, Theta, G, S, S_not=None):
+    def policy(self, Theta: Any, G: Any, S: Any, S_not: Any=None) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -147,7 +156,7 @@ class TSP_RL:
             mu_list,
         )
 
-    def vBest(self, Theta, G, S, S_not=None):
+    def vBest(self, Theta: Any, G: Any, S: Any, S_not: Any=None) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -157,7 +166,7 @@ class TSP_RL:
         """
         return self.policy(Theta, G, S, S_not)[0][0]
 
-    def QBest(self, Theta, G, S, S_not=None):
+    def QBest(self, Theta: Any, G: Any, S: Any, S_not: Any=None) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -169,7 +178,7 @@ class TSP_RL:
 
     # Reward differences and handwritten derivatives
 
-    def R(self, C, t, n):
+    def R(self, C: Any, t: Any, n: Any) -> Any:
         """
         :param C: vector of accumulated costs
         :param t: zero-based index of the first action in the reward window
@@ -184,14 +193,14 @@ class TSP_RL:
         cost_before_window = 0.0 if t == 0 else C[t - 1]
         return C[t + n - 1] - cost_before_window
 
-    def dRelu_dz(self, z):
+    def dRelu_dz(self, z: Any) -> Any:
         """
         :param z: argument vector of relu function
         :return: matrix that is the derivative of relu(z) with respect to z
         """
         return np.diag(np.vectorize(lambda i: int(i > 0))(z)[:, 0])
 
-    def dthetafunc_dtheta_1(self, r, Theta, G, S, i, v):
+    def dthetafunc_dtheta_1(self, r: Any, Theta: Any, G: Any, S: Any, i: Any, v: Any) -> Any:
         """
         :param r: horizontal vector that multiplies to derivative numerator
         :param Theta: object consisting of list of theta weights
@@ -208,7 +217,7 @@ class TSP_RL:
         elif i in {3}:
             return np.zeros((1, Theta.p))
 
-    def dthetafunc_dtheta_2(self, r, Theta, G, S, i, mu_list, v):
+    def dthetafunc_dtheta_2(self, r: Any, Theta: Any, G: Any, S: Any, i: Any, mu_list: Any, v: Any) -> Any:
         """
         :param r: horizontal vector that multiplies to derivative numerator
         :param Theta: object consisting of list of theta weights
@@ -229,7 +238,7 @@ class TSP_RL:
                 [neighbor_dmu(u) + neighbor_outerproduct(u) for u in G.neighbors[v]]
             )
 
-    def dthetafunc_dtheta_3(self, r, Theta, G, i, v):
+    def dthetafunc_dtheta_3(self, r: Any, Theta: Any, G: Any, i: Any, v: Any) -> Any:
         """
         :param r: horizontal vector that multiplies to derivative numerator
         :param Theta: object consisting of list of theta weights
@@ -259,7 +268,7 @@ class TSP_RL:
                 )
             )
 
-    def dmu_dtheta(self, r, Theta, G, S, i, mu_list, v):
+    def dmu_dtheta(self, r: Any, Theta: Any, G: Any, S: Any, i: Any, mu_list: Any, v: Any) -> Any:
         """
         :param r: horizontal vector that multiplies to derivative numerator
         :param Theta: object consisting of list of theta weights
@@ -287,7 +296,7 @@ class TSP_RL:
             r_3 = self.dthetafunc_dtheta_3(r_new, Theta, G, i, v)
             return r_1 + r_2 + r_3
 
-    def dQ_dtheta(self, Theta, G, S, v, i):
+    def dQ_dtheta(self, Theta: Any, G: Any, S: Any, v: Any, i: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -325,7 +334,7 @@ class TSP_RL:
                 Theta.theta_5b.reshape(1, -1) @ self.dRelu_dz(rb_1),
             )
 
-    def dQBest_dtheta(self, Theta, G, S, i):
+    def dQBest_dtheta(self, Theta: Any, G: Any, S: Any, i: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -340,7 +349,7 @@ class TSP_RL:
             (v, Q), mu_list = self.policy(Theta, G, S, S_not)
             return self.dQ_dtheta(Theta, G, S, v, i)
 
-    def dz_dtheta(self, Theta, G, S_past, v_past, S, i):
+    def dz_dtheta(self, Theta: Any, G: Any, S_past: Any, v_past: Any, S: Any, i: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -354,7 +363,7 @@ class TSP_RL:
             Theta, G, S_past, v_past, i
         )
 
-    def dJ_dtheta(self, Theta, G, S_past, v_past, R_diff, S, i):
+    def dJ_dtheta(self, Theta: Any, G: Any, S_past: Any, v_past: Any, R_diff: Any, S: Any, i: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
@@ -374,14 +383,22 @@ class TSP_RL:
 
     # State, replay memory, and parameter updates
 
-    def updated_S(self, Theta, G, exploreOption=True):
+    def updated_S(self, Theta: Any, G: Any, exploreOption: Any=True) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param G: graph
         :return: function that updates vertex list S
         """
 
-        def f(S):
+        def f(S: Any) -> Any:
+            """Execute ``f``.
+
+            Args:
+                S: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             S_not = self.S_not(G, S)
             explore = exploreOption and (np.random.rand() < self.eps)
             v = (
@@ -393,14 +410,22 @@ class TSP_RL:
 
         return f
 
-    def updated_C(self, G, S):
+    def updated_C(self, G: Any, S: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
         :return: function that updates cost list C
         """
 
-        def f(C):
+        def f(C: Any) -> Any:
+            """Execute ``f``.
+
+            Args:
+                C: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             t = len(C)
             c_prev = 0 if len(C) == 0 else C[-1]
             c = (
@@ -413,7 +438,7 @@ class TSP_RL:
 
         return f
 
-    def updated_M(self, G, S, C):
+    def updated_M(self, G: Any, S: Any, C: Any) -> Any:
         """
         :param G: graph
         :param S: list of unique vertices of graph
@@ -421,7 +446,15 @@ class TSP_RL:
         :return: function that updates memory list M
         """
 
-        def f(M):
+        def f(M: Any) -> Any:
+            """Execute ``f``.
+
+            Args:
+                M: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if len(S) < self.n:
                 return M
 
@@ -442,14 +475,22 @@ class TSP_RL:
 
         return f
 
-    def updated_theta(self, Theta, B):
+    def updated_theta(self, Theta: Any, B: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param B: random batch from memory list
         :return: function that takes theta index and returns updated theta for that index
         """
 
-        def f(i):
+        def f(i: Any) -> Any:
+            """Execute ``f``.
+
+            Args:
+                i: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if i in {0, 1, 2, 3, 4, 5, 6, 7}:
                 batch_gradient = (
                     1 / len(B) * sum([self.dJ_dtheta(Theta, *b, i).T for b in B])
@@ -460,14 +501,22 @@ class TSP_RL:
 
         return f
 
-    def updated_Theta(self, M, t):
+    def updated_Theta(self, M: Any, t: Any) -> Any:
         """
         :param M: memory list
         :param t: current time index
         :return: function that updates object Theta
         """
 
-        def f(Theta):
+        def f(Theta: Any) -> Any:
+            """Execute ``f``.
+
+            Args:
+                Theta: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if t >= self.n:
                 r = min(len(M), self.beta)
                 B = random.sample(M, r)
@@ -481,7 +530,7 @@ class TSP_RL:
 
     # Training episodes and tour generation
 
-    def episode(self, Theta, M, G):
+    def episode(self, Theta: Any, M: Any, G: Any) -> Any:
         """
         :param Theta: object consisting of list of theta weights
         :param M: memory list
@@ -489,8 +538,20 @@ class TSP_RL:
         :return: (Theta_new, M_new, S) where (Theta_new, M_new) are updated and S is the permutation used for graph G
         """
 
-        def QLearn_recurse(S, C, M, Theta, t):
+        def QLearn_recurse(S: Any, C: Any, M: Any, Theta: Any, t: Any) -> Any:
 
+            """Execute ``QLearn_recurse``.
+
+            Args:
+                S: Input accepted by this function.
+                C: Input accepted by this function.
+                M: Input accepted by this function.
+                Theta: Input accepted by this function.
+                t: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if t == G.n:
                 return Theta, M, S
             else:
@@ -503,14 +564,23 @@ class TSP_RL:
 
         return QLearn_recurse([], [], M, Theta, 0)
 
-    def QLearning(self, Gs):
+    def QLearning(self, Gs: Any) -> Any:
         """
         :param Gs: list of graphs to use
         :return: (G_S_list, Theta) where G_S_list is a list of (G, S) for graph G and its corresponding
                  permutation S to use and Theta is the final list of weights after Q Learning
         """
 
-        def appendEpisodeResults(results, G):
+        def appendEpisodeResults(results: Any, G: Any) -> Any:
+            """Execute ``appendEpisodeResults``.
+
+            Args:
+                results: Input accepted by this function.
+                G: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             G_S_list, (Theta, M) = results
             Theta_new, M_new, S = self.episode(Theta, M, G)
             return G_S_list + [(G, S)], (Theta_new, M_new)
@@ -520,10 +590,19 @@ class TSP_RL:
         )
         return G_S_list_final, Theta_final
 
-    def calculateWalk(self, Theta, G, exploreOption=True):
+    def calculateWalk(self, Theta: Any, G: Any, exploreOption: Any=True) -> Any:
         """Construct a tour, optionally allowing random exploration."""
 
-        def appendS(i, S):
+        def appendS(i: Any, S: Any) -> Any:
+            """Execute ``appendS``.
+
+            Args:
+                i: Input accepted by this function.
+                S: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if i == G.n:
                 return S
 

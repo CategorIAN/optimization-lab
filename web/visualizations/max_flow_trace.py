@@ -1,3 +1,4 @@
+from typing import Any
 """Serializable Ford-Fulkerson traces built from the project's flow helpers."""
 
 from graphs.maximum_flow import (
@@ -8,7 +9,7 @@ from graphs.maximum_flow import (
 )
 
 
-def edge_records(edges):
+def edge_records(edges: Any) -> Any:
     """Convert a tuple-keyed edge mapping into JSON-safe records."""
     return [
         {"source": source, "target": target, "value": value}
@@ -16,14 +17,23 @@ def edge_records(edges):
     ]
 
 
-def flow_value(flow, source):
+def flow_value(flow: Any, source: Any) -> Any:
+    """Execute ``flow_value``.
+
+    Args:
+        flow: Input accepted by this function.
+        source: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return (
         sum(value for (start, _), value in flow.items() if start == source)
         - sum(value for (_, end), value in flow.items() if end == source)
     )
 
 
-def augmentation_operations(capacity, flow, path, bottleneck):
+def augmentation_operations(capacity: Any, flow: Any, path: Any, bottleneck: Any) -> Any:
     """Describe augment_flow's forward-first, reverse-cancellation updates."""
     operations = []
     for source, target in zip(path, path[1:]):
@@ -50,7 +60,7 @@ def augmentation_operations(capacity, flow, path, bottleneck):
     return operations
 
 
-def maximum_flow_trace(capacity, source, sink, strategy="bfs"):
+def maximum_flow_trace(capacity: Any, source: Any, sink: Any, strategy: Any="bfs") -> Any:
     """Return a step-by-step trace while delegating all flow work to existing code."""
     flow = {edge: 0 for edge in capacity}
     initial = {

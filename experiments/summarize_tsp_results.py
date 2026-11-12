@@ -1,3 +1,4 @@
+from typing import Any
 from pathlib import Path
 
 import matplotlib
@@ -9,7 +10,12 @@ from experiments.hyperparameter_results import (
 )
 
 
-def main():
+def main() -> Any:
+    """Execute ``main``.
+
+    Returns:
+        Result produced by this function.
+    """
     project_dir = Path(__file__).resolve().parent
     error_file = project_dir / "results" / "tsp_small" / "Error.csv"
 

@@ -1,3 +1,4 @@
+from typing import Any
 """TSP comparison using the repository's Euclidean, RL, and Held-Karp code."""
 
 from graphs.euclidean_graph import EuclideanGraph
@@ -17,7 +18,7 @@ RL_SETTINGS = {
 }
 
 
-def closed_valid_tour(tour, city_count):
+def closed_valid_tour(tour: Any, city_count: Any) -> Any:
     """Validate a solver's permutation and return a closed JSON-safe tour."""
     open_tour = [int(city) for city in tour]
     if len(open_tour) != city_count or set(open_tour) != set(range(city_count)):
@@ -25,7 +26,7 @@ def closed_valid_tour(tour, city_count):
     return open_tour + [open_tour[0]]
 
 
-def solve_tsp(points, checkpoint=None):
+def solve_tsp(points: Any, checkpoint: Any=None) -> Any:
     """Run both existing solvers against one EuclideanGraph and compare lengths."""
     graph = EuclideanGraph(points)
     if checkpoint is None:

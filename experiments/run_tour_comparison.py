@@ -1,3 +1,4 @@
+from typing import Any
 
 import json
 import random
@@ -14,7 +15,12 @@ from graphs.euclidean_graph import EuclideanGraph
 from traveling_salesman.held_karp import TSP_HK
 
 
-def main():
+def main() -> Any:
+    """Execute ``main``.
+
+    Returns:
+        Result produced by this function.
+    """
     project_dir = Path(__file__).resolve().parent
     output_dir = project_dir / "results" / "tour_comparison"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -101,7 +107,15 @@ def main():
 
     solver = TSP_HK()
 
-    def graph_record(points):
+    def graph_record(points: Any) -> Any:
+        """Execute ``graph_record``.
+
+        Args:
+            points: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         graph = EuclideanGraph(points)
         optimal_tour = solver.calculateWalk(graph)
 

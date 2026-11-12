@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 from functools import reduce
 from typing import NamedTuple
@@ -10,11 +11,30 @@ class SegmentationResult(NamedTuple):
     error: float
 
 
-def fit_line(x, a, b):
+def fit_line(x: Any, a: Any, b: Any) -> Any:
+    """Execute ``fit_line``.
+
+    Args:
+        x: Input accepted by this function.
+        a: Input accepted by this function.
+        b: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return a * np.asarray(x) + b
 
 
-def best_line(x, y):
+def best_line(x: Any, y: Any) -> Any:
+    """Execute ``best_line``.
+
+    Args:
+        x: Input accepted by this function.
+        y: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
 
@@ -37,7 +57,18 @@ def best_line(x, y):
     return float(a), float(b)
 
 
-def least_squares_error(x, y, i, j):
+def least_squares_error(x: Any, y: Any, i: Any, j: Any) -> Any:
+    """Execute ``least_squares_error``.
+
+    Args:
+        x: Input accepted by this function.
+        y: Input accepted by this function.
+        i: Input accepted by this function.
+        j: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     if i >= j:
         return 0.0
 
@@ -51,7 +82,16 @@ def least_squares_error(x, y, i, j):
     return float(residuals @ residuals)
 
 
-def error_matrix(x, y):
+def error_matrix(x: Any, y: Any) -> Any:
+    """Execute ``error_matrix``.
+
+    Args:
+        x: Input accepted by this function.
+        y: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     n = len(x)
     matrix = np.zeros((n, n))
 
@@ -62,9 +102,26 @@ def error_matrix(x, y):
     return matrix
 
 
-def recover_segments(segment_array):
+def recover_segments(segment_array: Any) -> Any:
+    """Execute ``recover_segments``.
+
+    Args:
+        segment_array: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     @tail_recursive
-    def go(end, segments):
+    def go(end: Any, segments: Any) -> Any:
+        """Execute ``go``.
+
+        Args:
+            end: Input accepted by this function.
+            segments: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         if end < 0:
             return segments
 
@@ -78,14 +135,33 @@ def recover_segments(segment_array):
     return go(len(segment_array) - 1, [])
 
 
-def segmented_least_squares(x, y, cost):
+def segmented_least_squares(x: Any, y: Any, cost: Any) -> Any:
+    """Execute ``segmented_least_squares``.
+
+    Args:
+        x: Input accepted by this function.
+        y: Input accepted by this function.
+        cost: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     errors = error_matrix(x, y)
     n = len(x)
 
     if n < 2:
         raise ValueError("At least two points are required.")
 
-    def dynamic_update(array, j):
+    def dynamic_update(array: Any, j: Any) -> Any:
+        """Execute ``dynamic_update``.
+
+        Args:
+            array: Input accepted by this function.
+            j: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         candidates = [
             (i, errors[i, j] + cost + array[i][1])
             for i in range(j)

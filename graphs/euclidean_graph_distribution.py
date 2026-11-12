@@ -1,3 +1,4 @@
+from typing import Any
 import random
 
 from graphs.euclidean_graph import EuclideanGraph
@@ -6,11 +7,11 @@ from graphs.euclidean_graph import EuclideanGraph
 class EuclideanGraphDistribution:
     def __init__(
         self,
-        pt_number_lim=(9, 9),
-        xlim=(-5, 5),
-        ylim=(-5, 5),
-        seed=None,
-    ):
+        pt_number_lim: Any=(9, 9),
+        xlim: Any=(-5, 5),
+        ylim: Any=(-5, 5),
+        seed: Any=None,
+    ) -> Any:
         """
         Generate graphs with integer coordinates.
 
@@ -31,7 +32,16 @@ class EuclideanGraphDistribution:
         self._rng = random.Random(seed)
 
     @staticmethod
-    def _validate_limits(name, limits):
+    def _validate_limits(name: Any, limits: Any) -> Any:
+        """Execute ``_validate_limits``.
+
+        Args:
+            name: Input accepted by this function.
+            limits: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         if len(limits) != 2:
             raise ValueError(f"{name} must contain two limits.")
 
@@ -43,7 +53,7 @@ class EuclideanGraphDistribution:
                 f"{name} minimum must not exceed its maximum."
             )
 
-    def randomGraph(self):
+    def randomGraph(self) -> Any:
         """Return a random graph drawn from this distribution."""
         n = self._rng.randint(*self.pt_number_lim)
 

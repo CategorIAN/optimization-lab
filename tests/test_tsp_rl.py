@@ -1,3 +1,4 @@
+from typing import Any
 import unittest
 
 import numpy as np
@@ -8,7 +9,12 @@ from traveling_salesman.tsp_rl import TSP_RL
 
 
 class TestTSPRL(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Any:
+        """Execute ``setUp``.
+
+        Returns:
+            Result produced by this function.
+        """
         self.model = TSP_RL(
             p=1,
             T=1,
@@ -32,21 +38,36 @@ class TestTSPRL(unittest.TestCase):
             for _ in range(8)
         ])
 
-    def test_selected_vertex_indicator(self):
+    def test_selected_vertex_indicator(self) -> Any:
+        """Execute ``test_selected_vertex_indicator``.
+
+        Returns:
+            Result produced by this function.
+        """
         np.testing.assert_array_equal(
             self.model.x(self.graph, [0, 2]),
             [1, 0, 1],
         )
 
-    def test_relu_is_elementwise_numpy_maximum(self):
+    def test_relu_is_elementwise_numpy_maximum(self) -> Any:
+        """Execute ``test_relu_is_elementwise_numpy_maximum``.
+
+        Returns:
+            Result produced by this function.
+        """
         np.testing.assert_allclose(
             self.model.relu(np.array([-1.0, 0.75])),
             [0.0, 0.75],
         )
 
-    def test_reward_is_change_in_negative_tour_length(self):
+    def test_reward_is_change_in_negative_tour_length(self) -> Any:
         # [0, 1] closes to 0 → 1 → 0: distance 4.
         # [0, 1, 2] closes to 0 → 1 → 2 → 0: distance 9.
+        """Execute ``test_reward_is_change_in_negative_tour_length``.
+
+        Returns:
+            Result produced by this function.
+        """
         self.assertEqual(
             self.model.c(self.graph, [0, 1]),
             -4,
@@ -56,7 +77,12 @@ class TestTSPRL(unittest.TestCase):
             -5,
         )
 
-    def test_first_embedding_layer(self):
+    def test_first_embedding_layer(self) -> Any:
+        """Execute ``test_first_embedding_layer``.
+
+        Returns:
+            Result produced by this function.
+        """
         layers = self.model.mu_list_final(
             self.theta, self.graph, [0]
         )
@@ -78,7 +104,12 @@ class TestTSPRL(unittest.TestCase):
             [[6, 6, 7]],
         )
 
-    def test_q_vector(self):
+    def test_q_vector(self) -> Any:
+        """Execute ``test_q_vector``.
+
+        Returns:
+            Result produced by this function.
+        """
         q_values, layers = self.model.Q_vec_mu_list(
             self.theta, self.graph, [0]
         )
@@ -93,7 +124,12 @@ class TestTSPRL(unittest.TestCase):
         )
         self.assertEqual(len(layers), 2)
 
-    def test_policy_selects_best_unvisited_vertex(self):
+    def test_policy_selects_best_unvisited_vertex(self) -> Any:
+        """Execute ``test_policy_selects_best_unvisited_vertex``.
+
+        Returns:
+            Result produced by this function.
+        """
         self.assertEqual(
             self.model.vBest(self.theta, self.graph, [0]),
             2,
@@ -105,7 +141,12 @@ class TestTSPRL(unittest.TestCase):
             1,
         )
 
-    def test_completed_tour_has_no_available_action(self):
+    def test_completed_tour_has_no_available_action(self) -> Any:
+        """Execute ``test_completed_tour_has_no_available_action``.
+
+        Returns:
+            Result produced by this function.
+        """
         tour = [0, 1, 2]
 
         self.assertIsNone(
@@ -116,14 +157,24 @@ class TestTSPRL(unittest.TestCase):
             0,
         )
 
-    def test_calculate_walk_visits_each_vertex_once(self):
+    def test_calculate_walk_visits_each_vertex_once(self) -> Any:
+        """Execute ``test_calculate_walk_visits_each_vertex_once``.
+
+        Returns:
+            Result produced by this function.
+        """
         tour = self.model.calculateWalk(
             self.theta, self.graph
         )
 
         self.assertEqual(sorted(tour), self.graph.vertices)
 
-    def test_episode_records_updated_one_step_transitions(self):
+    def test_episode_records_updated_one_step_transitions(self) -> Any:
+        """Execute ``test_episode_records_updated_one_step_transitions``.
+
+        Returns:
+            Result produced by this function.
+        """
         model = TSP_RL(
             p=1, T=1, eps=0, n=1, alpha=0, beta=1, gamma=1,
         )
@@ -141,7 +192,12 @@ class TestTSPRL(unittest.TestCase):
         self.assertEqual(memory[2][1:], ([0, 1], 2, -5, [0, 1, 2]))
         self.assertEqual(model.QBest(self.theta, self.graph, memory[-1][-1]), 0)
 
-    def test_episode_records_full_two_step_windows_including_terminal_city(self):
+    def test_episode_records_full_two_step_windows_including_terminal_city(self) -> Any:
+        """Execute ``test_episode_records_full_two_step_windows_including_terminal_city``.
+
+        Returns:
+            Result produced by this function.
+        """
         model = TSP_RL(
             p=1, T=1, eps=0, n=2, alpha=0, beta=1, gamma=1,
         )

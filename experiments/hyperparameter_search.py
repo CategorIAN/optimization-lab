@@ -1,3 +1,4 @@
+from typing import Any
 from functools import reduce
 from itertools import product
 from pathlib import Path
@@ -12,13 +13,13 @@ class HyperparameterSearch:
 
     def __init__(
         self,
-        hyp_range_dict,
-        k,
-        graph_file=None,
-        graphDist=None,
-        n=None,
-        output_dir="results/tsp",
-    ):
+        hyp_range_dict: Any,
+        k: Any,
+        graph_file: Any=None,
+        graphDist: Any=None,
+        n: Any=None,
+        output_dir: Any="results/tsp",
+    ) -> Any:
         """
         Prepare hyperparameter configurations and cross-validation folds.
 
@@ -88,11 +89,21 @@ class HyperparameterSearch:
 
         self.train_test_dict = self.get_train_test_dict(k)
 
-    def partition(self, k):
+    def partition(self, k: Any) -> Any:
         """Partition graph indices into k approximately equal folds."""
         quotient, remainder = divmod(self.n, k)
 
-        def build_partition(fold_index, start, folds):
+        def build_partition(fold_index: Any, start: Any, folds: Any) -> Any:
+            """Execute ``build_partition``.
+
+            Args:
+                fold_index: Input accepted by this function.
+                start: Input accepted by this function.
+                folds: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if fold_index == k:
                 return folds
 
@@ -108,12 +119,20 @@ class HyperparameterSearch:
 
         return build_partition(0, 0, [])
 
-    def get_train_test_dict(self, k):
+    def get_train_test_dict(self, k: Any) -> Any:
         """Map each fold to its training and test graph indices."""
         folds = self.partition(k)
 
-        def training_indices(fold_index):
+        def training_indices(fold_index: Any) -> Any:
             # All folds except the current test fold form the training set.
+            """Execute ``training_indices``.
+
+            Args:
+                fold_index: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             other_folds = (
                 folds[:fold_index] + folds[fold_index + 1:]
             )
@@ -132,10 +151,18 @@ class HyperparameterSearch:
             for fold_index in range(k)
         }
 
-    def approx_ratio(self, model, Theta):
+    def approx_ratio(self, model: Any, Theta: Any) -> Any:
         """Return a function calculating a solved graph's approximation ratio."""
 
-        def evaluate(solved_graph):
+        def evaluate(solved_graph: Any) -> Any:
+            """Execute ``evaluate``.
+
+            Args:
+                solved_graph: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             graph = solved_graph.graph
 
             # Disable random exploration when evaluating a trained model.
@@ -152,7 +179,7 @@ class HyperparameterSearch:
 
         return evaluate
 
-    def hyp_error(self, hyp_dict):
+    def hyp_error(self, hyp_dict: Any) -> Any:
         """Return the mean approximation ratio across folds."""
         hyp_params = [
             hyp_dict[name]
@@ -160,7 +187,15 @@ class HyperparameterSearch:
         ]
         model = TSP_RL(*hyp_params)
 
-        def fold_error(fold_index):
+        def fold_error(fold_index: Any) -> Any:
+            """Execute ``fold_error``.
+
+            Args:
+                fold_index: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             train_indices, test_indices = (
                 self.train_test_dict[fold_index]
             )
@@ -185,7 +220,7 @@ class HyperparameterSearch:
             for fold_index in self.train_test_dict
         ) / len(self.train_test_dict)
 
-    def getErrorDf(self, append=True):
+    def getErrorDf(self, append: Any=True) -> Any:
         """
         Evaluate and save one hyperparameter configuration.
 

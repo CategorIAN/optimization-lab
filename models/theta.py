@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 
@@ -13,7 +14,7 @@ class ThetaObject:
         "theta_7",
     )
 
-    def __init__(self, thetas):
+    def __init__(self, thetas: Any) -> Any:
         """Store and validate the eight structure2vec parameter arrays."""
         if len(thetas) != len(self.names):
             raise ValueError("Exactly eight parameter arrays are required.")
@@ -59,18 +60,28 @@ class ThetaObject:
         for name, array in zip(self.names, self.thetas):
             setattr(self, name, array)
 
-    def __str__(self):
+    def __str__(self) -> Any:
+        """Execute ``__str__``.
+
+        Returns:
+            Result produced by this function.
+        """
         return "\n".join(
             f"{'-' * 20}\n{name}\n{array}"
             for name, array in zip(self.names, self.thetas)
         )
 
-    def __repr__(self):
+    def __repr__(self) -> Any:
+        """Execute ``__repr__``.
+
+        Returns:
+            Result produced by this function.
+        """
         return f"{type(self).__name__}(p={self.p})"
 
 
 class RandomThetaObject(ThetaObject):
-    def __init__(self, p, seed=None):
+    def __init__(self, p: Any, seed: Any=None) -> Any:
         """
         Initialize parameters with uniform random values in [0, 1).
 

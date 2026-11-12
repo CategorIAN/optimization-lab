@@ -1,3 +1,4 @@
+from typing import Any
 import random
 from pathlib import Path
 
@@ -30,7 +31,7 @@ PAPER_PARAMETERS = {
 }
 
 
-def plot_training_tours(vertex_counts=(9, 14, 17), episodes=3):
+def plot_training_tours(vertex_counts: Any=(9, 14, 17), episodes: Any=3) -> Any:
     """Run a separate training experiment for each graph size."""
     for vertex_count in vertex_counts:
         output_dir = (
@@ -62,7 +63,7 @@ def plot_training_tours(vertex_counts=(9, 14, 17), episodes=3):
         experiment.drawGraphs(comparisons)
 
 
-def print_graphs_as_latex(graph_file, start_row=0):
+def print_graphs_as_latex(graph_file: Any, start_row: Any=0) -> Any:
     """Display a JSON graph dataset as a flat LaTeX table."""
     solved_graphs = WalkedGraphs(graph_file).graphs
 
@@ -85,7 +86,7 @@ def print_graphs_as_latex(graph_file, start_row=0):
     )
 
 
-def print_best_results_as_latex(error_file):
+def print_best_results_as_latex(error_file: Any) -> Any:
     """Display saved best-result rows as a LaTeX table."""
     dataframe = pd.read_csv(error_file, index_col=0)
     print(dataframe.to_latex())

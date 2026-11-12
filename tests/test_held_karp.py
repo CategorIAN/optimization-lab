@@ -1,3 +1,4 @@
+from typing import Any
 import unittest
 from itertools import permutations
 
@@ -9,7 +10,12 @@ from traveling_salesman.held_karp import TSP_HK
 
 
 class TestHeldKarp(unittest.TestCase):
-    def test_four_city_example_from_paper(self):
+    def test_four_city_example_from_paper(self) -> Any:
+        """Execute ``test_four_city_example_from_paper``.
+
+        Returns:
+            Result produced by this function.
+        """
         graph = EuclideanGraph([
             (1, 0),
             (0, 1),
@@ -29,8 +35,13 @@ class TestHeldKarp(unittest.TestCase):
             4 * np.sqrt(2),
         )
 
-    def test_matches_brute_force(self):
+    def test_matches_brute_force(self) -> Any:
         # Unequal, directional weights provide a less symmetric example.
+        """Execute ``test_matches_brute_force``.
+
+        Returns:
+            Result produced by this function.
+        """
         graph = CompleteGraph([
             [0, 2, 9, 10],
             [1, 0, 6, 4],
@@ -53,7 +64,12 @@ class TestHeldKarp(unittest.TestCase):
             optimal_distance,
         )
 
-    def test_single_vertex(self):
+    def test_single_vertex(self) -> Any:
+        """Execute ``test_single_vertex``.
+
+        Returns:
+            Result produced by this function.
+        """
         graph = CompleteGraph([[0]])
 
         tour = TSP_HK().calculateWalk(graph)

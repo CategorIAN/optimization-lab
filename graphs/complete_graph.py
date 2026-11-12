@@ -1,10 +1,11 @@
+from typing import Any
 from itertools import product
 import numpy as np
 from functools import reduce
 import random
 
 class CompleteGraph:
-    def __init__(self, dist_matrix):
+    def __init__(self, dist_matrix: Any) -> Any:
         """
         Create a weighted complete graph.
 
@@ -45,58 +46,58 @@ class CompleteGraph:
         self.N = self.neighbor_matrix()
         self.U = self.getU()
 
-    def closeWalk(self, walk):
+    def closeWalk(self, walk: Any) -> Any:
         """Return the walk with its starting vertex appended if needed."""
         if not walk or walk[-1] == walk[0]:
             return walk
 
         return walk + [walk[0]]
 
-    def randomHamCycle(self):
+    def randomHamCycle(self) -> Any:
         """Return a random Hamiltonian cycle."""
         walk = random.sample(self.vertices, k=self.n)
         return self.closeWalk(walk)
 
-    def walkDistance(self, walk):
+    def walkDistance(self, walk: Any) -> Any:
         """Return the total weight of the edges in a walk."""
         return sum(
             self.w[current, next_vertex]
             for current, next_vertex in zip(walk, walk[1:])
         )
 
-    def tourDistance(self, tour):
+    def tourDistance(self, tour: Any) -> Any:
         """Return the distance of a tour, including the return to its start."""
         return self.walkDistance(self.closeWalk(tour))
 
-    def neighbor_vec(self, vertex):
+    def neighbor_vec(self, vertex: Any) -> Any:
         """Return a column vector indicating the neighbors of a vertex."""
         return np.array([
             [int(other in self.neighbors[vertex])]
             for other in self.vertices
         ])
 
-    def neighbor_matrix(self):
+    def neighbor_matrix(self) -> Any:
         """Return a matrix whose columns are neighbor vectors."""
         return np.concatenate(
             [self.neighbor_vec(vertex) for vertex in self.vertices],
             axis=1,
         )
 
-    def unit_vec(self, vertex):
+    def unit_vec(self, vertex: Any) -> Any:
         """Return a column unit vector for a vertex."""
         return np.array([
             [int(other == vertex)]
             for other in self.vertices
         ])
 
-    def neighbor_square(self, vertex):
+    def neighbor_square(self, vertex: Any) -> Any:
         """Return a matrix with the vertex's neighbor vector in its column."""
         return np.outer(
             self.neighbor_vec(vertex),
             self.unit_vec(vertex),
         )
 
-    def getU(self):
+    def getU(self) -> Any:
         """Stack the neighbor-square matrices used by structure2vec."""
         return np.concatenate(
             [self.neighbor_square(vertex) for vertex in self.vertices],

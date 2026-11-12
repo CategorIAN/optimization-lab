@@ -1,8 +1,18 @@
+from typing import Any
 import random
 import pandas as pd
 
 
-def random_flow_network(n, seed=None):
+def random_flow_network(n: Any, seed: Any=None) -> Any:
+    """Execute ``random_flow_network``.
+
+    Args:
+        n: Input accepted by this function.
+        seed: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     if n < 2:
         raise ValueError("n must be at least 2.")
 
@@ -29,7 +39,16 @@ def random_flow_network(n, seed=None):
     }
 
 
-def save_flow_network(capacity, file):
+def save_flow_network(capacity: Any, file: Any) -> Any:
+    """Execute ``save_flow_network``.
+
+    Args:
+        capacity: Input accepted by this function.
+        file: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     df = pd.DataFrame(
         [
             {"Tail": u, "Head": v, "Capacity": c}
@@ -39,7 +58,15 @@ def save_flow_network(capacity, file):
     df.to_csv(file, index=False)
 
 
-def load_flow_network(file):
+def load_flow_network(file: Any) -> Any:
+    """Execute ``load_flow_network``.
+
+    Args:
+        file: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     df = pd.read_csv(file)
 
     return {

@@ -1,3 +1,4 @@
+from typing import Any
 import unittest
 
 import numpy as np
@@ -8,7 +9,12 @@ from graphs.euclidean_graph_distribution import (
 
 
 class TestEuclideanGraphDistribution(unittest.TestCase):
-    def test_generated_graph_respects_limits(self):
+    def test_generated_graph_respects_limits(self) -> Any:
+        """Execute ``test_generated_graph_respects_limits``.
+
+        Returns:
+            Result produced by this function.
+        """
         distribution = EuclideanGraphDistribution(
             pt_number_lim=(3, 5),
             xlim=(-2, 2),
@@ -24,7 +30,12 @@ class TestEuclideanGraphDistribution(unittest.TestCase):
         self.assertTrue(np.all(graph.points[:, 1] >= 10))
         self.assertTrue(np.all(graph.points[:, 1] <= 12))
 
-    def test_same_seed_reproduces_graph_sequence(self):
+    def test_same_seed_reproduces_graph_sequence(self) -> Any:
+        """Execute ``test_same_seed_reproduces_graph_sequence``.
+
+        Returns:
+            Result produced by this function.
+        """
         first = EuclideanGraphDistribution(seed=42)
         second = EuclideanGraphDistribution(seed=42)
 
@@ -34,11 +45,21 @@ class TestEuclideanGraphDistribution(unittest.TestCase):
                 second.randomGraph().points,
             )
 
-    def test_rejects_reversed_limits(self):
+    def test_rejects_reversed_limits(self) -> Any:
+        """Execute ``test_rejects_reversed_limits``.
+
+        Returns:
+            Result produced by this function.
+        """
         with self.assertRaises(ValueError):
             EuclideanGraphDistribution(xlim=(5, -5))
 
-    def test_rejects_zero_points(self):
+    def test_rejects_zero_points(self) -> Any:
+        """Execute ``test_rejects_zero_points``.
+
+        Returns:
+            Result produced by this function.
+        """
         with self.assertRaises(ValueError):
             EuclideanGraphDistribution(pt_number_lim=(0, 9))
 

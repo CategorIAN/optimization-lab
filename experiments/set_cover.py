@@ -1,3 +1,4 @@
+from typing import Any
 import random
 from greedy.set_cover import greedy_set_cover
 import matplotlib
@@ -6,7 +7,18 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 
-def generate_random_collection(n_elements, n_sets, probability=0.5, seed=None):
+def generate_random_collection(n_elements: Any, n_sets: Any, probability: Any=0.5, seed: Any=None) -> Any:
+    """Execute ``generate_random_collection``.
+
+    Args:
+        n_elements: Input accepted by this function.
+        n_sets: Input accepted by this function.
+        probability: Input accepted by this function.
+        seed: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     rng = random.Random(seed)
 
     return {
@@ -18,7 +30,18 @@ def generate_random_collection(n_elements, n_sets, probability=0.5, seed=None):
     }
 
 
-def run_experiment(n_elements, n_sets, probability=0.5, seed=None):
+def run_experiment(n_elements: Any, n_sets: Any, probability: Any=0.5, seed: Any=None) -> Any:
+    """Execute ``run_experiment``.
+
+    Args:
+        n_elements: Input accepted by this function.
+        n_sets: Input accepted by this function.
+        probability: Input accepted by this function.
+        seed: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     collection = generate_random_collection(
         n_elements,
         n_sets,
@@ -43,7 +66,12 @@ def run_experiment(n_elements, n_sets, probability=0.5, seed=None):
     }
 
 
-def run_experiments():
+def run_experiments() -> Any:
+    """Execute ``run_experiments``.
+
+    Returns:
+        Result produced by this function.
+    """
     results = [
         run_experiment(
             n_elements=n,
@@ -60,7 +88,15 @@ def run_experiments():
     return results
 
 
-def plot_experiments(results):
+def plot_experiments(results: Any) -> Any:
+    """Execute ``plot_experiments``.
+
+    Args:
+        results: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     x = [r["n_elements"] for r in results]
     y = [r["selected_count"] for r in results]
 

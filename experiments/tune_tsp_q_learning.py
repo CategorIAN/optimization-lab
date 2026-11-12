@@ -1,3 +1,4 @@
+from typing import Any
 """Reproducible random-search tuning for the existing TSP Q-learning model.
 
 Smoke run (small, intended as a reproducibility check):
@@ -36,18 +37,35 @@ HYPERPARAMETER_NAMES = ("p", "T", "eps", "n", "alpha", "beta", "gamma")
 FIXED_HYPERPARAMETERS = {"p": 1, "T": 1, "n": 1, "beta": 1, "gamma": 1}
 
 
-def closed_tour(tour, size):
+def closed_tour(tour: Any, size: Any) -> Any:
+    """Execute ``closed_tour``.
+
+    Args:
+        tour: Input accepted by this function.
+        size: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     tour = [int(vertex) for vertex in tour]
     if len(tour) != size or set(tour) != set(range(size)):
         raise ValueError("Q-learning returned a non-Hamiltonian tour.")
     return tour + [tour[0]]
 
 
-def theta_payload(theta):
+def theta_payload(theta: Any) -> Any:
+    """Execute ``theta_payload``.
+
+    Args:
+        theta: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return [array.tolist() for array in theta.thetas]
 
 
-def generate_graph_records(seed, count, city_count):
+def generate_graph_records(seed: Any, count: Any, city_count: Any) -> Any:
     """Generate distinct-coordinate Euclidean graphs and cache Held-Karp optima."""
     rng = random.Random(seed)
     solver = TSP_HK()
@@ -65,20 +83,47 @@ def generate_graph_records(seed, count, city_count):
     return records
 
 
-def save_json(path, value):
+def save_json(path: Any, value: Any) -> Any:
+    """Execute ``save_json``.
+
+    Args:
+        path: Input accepted by this function.
+        value: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     path.write_text(json.dumps(value, indent=2, allow_nan=False), encoding="utf-8")
 
 
-def load_graphs(records):
+def load_graphs(records: Any) -> Any:
+    """Execute ``load_graphs``.
+
+    Args:
+        records: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return [(EuclideanGraph(record["points"]), record) for record in records]
 
 
-def ratio(graph, tour, optimal_length):
+def ratio(graph: Any, tour: Any, optimal_length: Any) -> Any:
+    """Execute ``ratio``.
+
+    Args:
+        graph: Input accepted by this function.
+        tour: Input accepted by this function.
+        optimal_length: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     distance = float(graph.tourDistance(tour))
     return None if optimal_length == 0 else distance / optimal_length
 
 
-def evaluate(model, theta, graphs, baseline_seed):
+def evaluate(model: Any, theta: Any, graphs: Any, baseline_seed: Any) -> Any:
     """Evaluation is greedy only; it neither changes theta nor consumes model RNG."""
     baseline_rng = random.Random(baseline_seed)
     learned, random_baseline = [], []
@@ -100,7 +145,7 @@ def evaluate(model, theta, graphs, baseline_seed):
     }
 
 
-def train_and_diagnose(hyperparameters, training_graphs, validation_graphs, seed, checkpoints):
+def train_and_diagnose(hyperparameters: Any, training_graphs: Any, validation_graphs: Any, seed: Any, checkpoints: Any) -> Any:
     """Run existing episode updates, retaining theta and replay memory within one run."""
     random.seed(seed)
     np.random.seed(seed)
@@ -110,7 +155,15 @@ def train_and_diagnose(hyperparameters, training_graphs, validation_graphs, seed
     diagnostics = []
     previous_theta = theta_payload(theta)
 
-    def record_checkpoint(episode):
+    def record_checkpoint(episode: Any) -> Any:
+        """Execute ``record_checkpoint``.
+
+        Args:
+            episode: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         score = evaluate(model, theta, validation_graphs, baseline_seed=seed + 10_000)
         flat_before = np.concatenate([np.asarray(value).ravel() for value in previous_theta])
         flat_after = np.concatenate([array.ravel() for array in theta.thetas])
@@ -134,7 +187,16 @@ def train_and_diagnose(hyperparameters, training_graphs, validation_graphs, seed
     return theta, diagnostics, elapsed
 
 
-def sample_candidates(seed, count):
+def sample_candidates(seed: Any, count: Any) -> Any:
+    """Execute ``sample_candidates``.
+
+    Args:
+        seed: Input accepted by this function.
+        count: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     rng = random.Random(seed)
     candidates = []
     for index in range(count):
@@ -147,7 +209,19 @@ def sample_candidates(seed, count):
     return candidates
 
 
-def run_candidate(candidate, train_graphs, validation_graphs, seed, checkpoints):
+def run_candidate(candidate: Any, train_graphs: Any, validation_graphs: Any, seed: Any, checkpoints: Any) -> Any:
+    """Execute ``run_candidate``.
+
+    Args:
+        candidate: Input accepted by this function.
+        train_graphs: Input accepted by this function.
+        validation_graphs: Input accepted by this function.
+        seed: Input accepted by this function.
+        checkpoints: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     hyperparameters = {name: candidate[name] for name in HYPERPARAMETER_NAMES}
     theta, diagnostics, training_seconds = train_and_diagnose(
         hyperparameters, train_graphs, validation_graphs, seed, checkpoints
@@ -166,7 +240,16 @@ def run_candidate(candidate, train_graphs, validation_graphs, seed, checkpoints)
     }
 
 
-def plot_diagnostics(results, output_path):
+def plot_diagnostics(results: Any, output_path: Any) -> Any:
+    """Execute ``plot_diagnostics``.
+
+    Args:
+        results: Input accepted by this function.
+        output_path: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     figure, axis = plt.subplots(figsize=(7, 4))
     for result in results:
         episodes = [item["episode"] for item in result["diagnostics"]]
@@ -181,7 +264,12 @@ def plot_diagnostics(results, output_path):
     plt.close(figure)
 
 
-def main():
+def main() -> Any:
+    """Execute ``main``.
+
+    Returns:
+        Result produced by this function.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="results/tsp_tuning")
     parser.add_argument("--seed", type=int, default=2026)

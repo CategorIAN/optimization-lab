@@ -1,3 +1,4 @@
+from typing import Any
 from functools import reduce
 from pathlib import Path
 
@@ -9,7 +10,7 @@ import pandas as pd
 class HyperparameterResults:
     """Summarize and plot saved TSP hyperparameter-search results."""
 
-    def __init__(self, error_file, output_dir=None):
+    def __init__(self, error_file: Any, output_dir: Any=None) -> Any:
         """
         error_file: CSV produced by HyperparameterSearch.
         output_dir: Directory for summaries and charts.
@@ -33,7 +34,7 @@ class HyperparameterResults:
             "gamma",
         ]
 
-    def groupedErrorDf(self):
+    def groupedErrorDf(self) -> Any:
         """Return a function giving mean approximation ratio by parameter."""
         results = pd.read_csv(self.error_file, index_col=0)
 
@@ -41,11 +42,20 @@ class HyperparameterResults:
             results.groupby(name)["Error"].mean()
         )
 
-    def groupedErrorDfs(self):
+    def groupedErrorDfs(self) -> Any:
         """Save and return a summary for each hyperparameter."""
         grouped_error = self.groupedErrorDf()
 
-        def append_summary(summaries, name):
+        def append_summary(summaries: Any, name: Any) -> Any:
+            """Execute ``append_summary``.
+
+            Args:
+                summaries: Input accepted by this function.
+                name: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             summary = grouped_error(name)
 
             summary.to_csv(
@@ -60,11 +70,20 @@ class HyperparameterResults:
             {},
         )
 
-    def plots(self):
+    def plots(self) -> Any:
         """Save and display bar charts of grouped approximation ratios."""
         summaries = self.groupedErrorDfs()
 
-        def plot_group(names, group_number):
+        def plot_group(names: Any, group_number: Any) -> Any:
+            """Execute ``plot_group``.
+
+            Args:
+                names: Input accepted by this function.
+                group_number: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             fig, axes = plt.subplots(
                 2,
                 2,
@@ -109,7 +128,7 @@ class HyperparameterResults:
         plot_group(self.hyp_names[:4], 1)
         plot_group(self.hyp_names[4:], 2)
 
-    def bestParams(self):
+    def bestParams(self) -> Any:
         """
         Return the best value of each parameter by its grouped mean.
 
@@ -122,7 +141,7 @@ class HyperparameterResults:
             for name in self.hyp_names
         }
 
-    def bestConfiguration(self):
+    def bestConfiguration(self) -> Any:
         """Return the tested configuration with the lowest mean ratio."""
         results = pd.read_csv(self.error_file, index_col=0)
 
@@ -133,7 +152,7 @@ class HyperparameterResults:
 
         return results.loc[best_index].to_dict()
 
-    def bestRows(self):
+    def bestRows(self) -> Any:
         """Save and return configurations with ratios approximately 1."""
         results = pd.read_csv(self.error_file, index_col=0)
 

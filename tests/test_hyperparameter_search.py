@@ -1,3 +1,4 @@
+from typing import Any
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,7 +10,12 @@ from traveling_salesman.walked_graphs import SolvedGraph
 
 
 class TestHyperparameterSearch(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Any:
+        """Execute ``setUp``.
+
+        Returns:
+            Result produced by this function.
+        """
         temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(temporary_directory.cleanup)
 
@@ -51,28 +57,48 @@ class TestHyperparameterSearch(unittest.TestCase):
                 output_dir=self.output_dir,
             )
 
-    def test_generates_hyperparameter_combinations(self):
+    def test_generates_hyperparameter_combinations(self) -> Any:
+        """Execute ``test_generates_hyperparameter_combinations``.
+
+        Returns:
+            Result produced by this function.
+        """
         self.assertEqual(len(self.search.hyp_dicts), 2)
         self.assertEqual(
             [config["p"] for config in self.search.hyp_dicts],
             [2, 3],
         )
 
-    def test_partition_distributes_all_indices(self):
+    def test_partition_distributes_all_indices(self) -> Any:
         # Five examples split into folds of three and two.
+        """Execute ``test_partition_distributes_all_indices``.
+
+        Returns:
+            Result produced by this function.
+        """
         self.assertEqual(
             self.search.partition(2),
             [[0, 1, 2], [3, 4]],
         )
 
-    def test_training_and_test_sets_are_separate(self):
+    def test_training_and_test_sets_are_separate(self) -> Any:
+        """Execute ``test_training_and_test_sets_are_separate``.
+
+        Returns:
+            Result produced by this function.
+        """
         all_indices = set(range(5))
 
         for train, test in self.search.train_test_dict.values():
             self.assertTrue(set(train).isdisjoint(test))
             self.assertEqual(set(train) | set(test), all_indices)
 
-    def test_approximation_ratio_disables_exploration(self):
+    def test_approximation_ratio_disables_exploration(self) -> Any:
+        """Execute ``test_approximation_ratio_disables_exploration``.
+
+        Returns:
+            Result produced by this function.
+        """
         solved_graph = self.search.graphs[0]
 
         with patch(
@@ -92,8 +118,13 @@ class TestHyperparameterSearch(unittest.TestCase):
                 exploreOption=False,
             )
 
-    def test_saves_and_resumes_results(self):
+    def test_saves_and_resumes_results(self) -> Any:
         # Test persistence independently of neural-network training.
+        """Execute ``test_saves_and_resumes_results``.
+
+        Returns:
+            Result produced by this function.
+        """
         with patch.object(
             self.search,
             "hyp_error",

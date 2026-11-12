@@ -1,3 +1,4 @@
+from typing import Any
 from collections import deque
 from functools import reduce
 from math import inf
@@ -5,7 +6,7 @@ from math import inf
 from tail_recursive import tail_recursive
 
 
-def residual_network(capacity, flow):
+def residual_network(capacity: Any, flow: Any) -> Any:
     """
     Construct a residual network.
 
@@ -15,7 +16,16 @@ def residual_network(capacity, flow):
     Returns:
         {(u, v): residual_capacity}
     """
-    def add_edge(residual, edge):
+    def add_edge(residual: Any, edge: Any) -> Any:
+        """Execute ``add_edge``.
+
+        Args:
+            residual: Input accepted by this function.
+            edge: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         u, v = edge
         forward = capacity[edge] - flow[edge]
         backward = flow[edge]
@@ -31,7 +41,7 @@ def residual_network(capacity, flow):
     return reduce(add_edge, capacity, {})
 
 
-def augmenting_path(residual, source, sink, strategy="bfs"):
+def augmenting_path(residual: Any, source: Any, sink: Any, strategy: Any="bfs") -> Any:
     """
     Find an augmenting path using BFS or DFS.
 
@@ -52,7 +62,17 @@ def augmenting_path(residual, source, sink, strategy="bfs"):
             neighbors.setdefault(u, []).append(v)
 
     @tail_recursive
-    def search(frontier, visited, parent):
+    def search(frontier: Any, visited: Any, parent: Any) -> Any:
+        """Execute ``search``.
+
+        Args:
+            frontier: Input accepted by this function.
+            visited: Input accepted by this function.
+            parent: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         if not frontier:
             return None
 
@@ -60,7 +80,16 @@ def augmenting_path(residual, source, sink, strategy="bfs"):
 
         if current == sink:
             @tail_recursive
-            def recover(node, path):
+            def recover(node: Any, path: Any) -> Any:
+                """Execute ``recover``.
+
+                Args:
+                    node: Input accepted by this function.
+                    path: Input accepted by this function.
+
+                Returns:
+                    Result produced by this function.
+                """
                 if node == source:
                     return [source] + path
 
@@ -101,7 +130,7 @@ def augmenting_path(residual, source, sink, strategy="bfs"):
     return search([source], {source}, {})
 
 
-def augment_flow(capacity, flow, path):
+def augment_flow(capacity: Any, flow: Any, path: Any) -> Any:
     """
     Augment flow along a residual path.
 
@@ -121,7 +150,16 @@ def augment_flow(capacity, flow, path):
         residual[edge] for edge in edges
     )
 
-    def update(current_flow, edge):
+    def update(current_flow: Any, edge: Any) -> Any:
+        """Execute ``update``.
+
+        Args:
+            current_flow: Input accepted by this function.
+            edge: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         u, v = edge
         remaining = bottleneck
 
@@ -144,7 +182,7 @@ def augment_flow(capacity, flow, path):
     return reduce(update, edges, flow.copy())
 
 
-def ford_fulkerson(capacity, source, sink, strategy="bfs", count=False):
+def ford_fulkerson(capacity: Any, source: Any, sink: Any, strategy: Any="bfs", count: Any=False) -> Any:
     """
     Compute maximum flow using Ford-Fulkerson.
 
@@ -170,7 +208,16 @@ def ford_fulkerson(capacity, source, sink, strategy="bfs", count=False):
     }
 
     @tail_recursive
-    def go(flow, iterations):
+    def go(flow: Any, iterations: Any) -> Any:
+        """Execute ``go``.
+
+        Args:
+            flow: Input accepted by this function.
+            iterations: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         residual = residual_network(capacity, flow)
         path = augmenting_path(
             residual, source, sink, strategy

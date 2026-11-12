@@ -1,3 +1,4 @@
+from typing import Any
 import json
 import math
 from time import perf_counter
@@ -25,23 +26,31 @@ MAX_TSP_CITIES = 9
 
 
 @ensure_csrf_cookie
-def home(request):
+def home(request: Any) -> Any:
     """Render the Optimization Lab landing page."""
     return render(request, "visualizations/home.html")
 
 
 @ensure_csrf_cookie
-def segmented_least_squares_page(request):
+def segmented_least_squares_page(request: Any) -> Any:
     """Render the interactive segmented least squares demonstration."""
     return render(request, "visualizations/segmented_least_squares.html")
 
 
-def _invalid_request(message):
+def _invalid_request(message: Any) -> Any:
+    """Execute ``_invalid_request``.
+
+    Args:
+        message: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return JsonResponse({"error": message}, status=400)
 
 
 @require_POST
-def solve_segmented_least_squares(request):
+def solve_segmented_least_squares(request: Any) -> Any:
     """Run the existing segmented least squares implementation for submitted points."""
     try:
         payload = json.loads(request.body)
@@ -115,13 +124,13 @@ def solve_segmented_least_squares(request):
 
 
 @ensure_csrf_cookie
-def greedy_set_cover_page(request):
+def greedy_set_cover_page(request: Any) -> Any:
     """Render the interactive greedy set cover demonstration."""
     return render(request, "visualizations/greedy_set_cover.html")
 
 
 @require_POST
-def solve_greedy_set_cover(request):
+def solve_greedy_set_cover(request: Any) -> Any:
     """Run the existing greedy set cover function for a browser-generated collection."""
     try:
         payload = json.loads(request.body)
@@ -156,12 +165,28 @@ def solve_greedy_set_cover(request):
 
 
 @ensure_csrf_cookie
-def maximum_flow_page(request):
+def maximum_flow_page(request: Any) -> Any:
+    """Execute ``maximum_flow_page``.
+
+    Args:
+        request: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return render(request, "visualizations/maximum_flow.html")
 
 
 @require_POST
-def trace_maximum_flow(request):
+def trace_maximum_flow(request: Any) -> Any:
+    """Execute ``trace_maximum_flow``.
+
+    Args:
+        request: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     try:
         payload = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -203,12 +228,28 @@ def trace_maximum_flow(request):
 
 
 @ensure_csrf_cookie
-def traveling_salesman_page(request):
+def traveling_salesman_page(request: Any) -> Any:
+    """Execute ``traveling_salesman_page``.
+
+    Args:
+        request: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     return render(request, "visualizations/traveling_salesman.html", {"max_cities": MAX_TSP_CITIES})
 
 
 @require_POST
-def solve_traveling_salesman(request):
+def solve_traveling_salesman(request: Any) -> Any:
+    """Execute ``solve_traveling_salesman``.
+
+    Args:
+        request: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     try:
         payload = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError):

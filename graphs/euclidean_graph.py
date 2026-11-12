@@ -1,10 +1,11 @@
+from typing import Any
 import numpy as np
 
 from graphs.complete_graph import CompleteGraph
 
 
 class EuclideanGraph(CompleteGraph):
-    def __init__(self, points):
+    def __init__(self, points: Any) -> Any:
         """
         Create a complete graph from points in Euclidean space.
 
@@ -36,5 +37,10 @@ class EuclideanGraph(CompleteGraph):
 
         super().__init__(dist_matrix)
 
-    def __repr__(self):
+    def __repr__(self) -> Any:
+        """Execute ``__repr__``.
+
+        Returns:
+            Result produced by this function.
+        """
         return f"EuclideanGraph(points={self.points.tolist()!r})"

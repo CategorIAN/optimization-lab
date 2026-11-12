@@ -1,3 +1,4 @@
+from typing import Any
 import unittest
 
 import numpy as np
@@ -6,7 +7,12 @@ from models.theta import RandomThetaObject, ThetaObject
 
 
 class TestThetaObject(unittest.TestCase):
-    def test_parameter_shapes(self):
+    def test_parameter_shapes(self) -> Any:
+        """Execute ``test_parameter_shapes``.
+
+        Returns:
+            Result produced by this function.
+        """
         theta = RandomThetaObject(p=3, seed=42)
 
         for name in ("theta_1", "theta_4", "theta_5a", "theta_5b"):
@@ -15,7 +21,12 @@ class TestThetaObject(unittest.TestCase):
         for name in ("theta_2", "theta_3", "theta_6", "theta_7"):
             self.assertEqual(getattr(theta, name).shape, (3, 3))
 
-    def test_same_seed_reproduces_parameters(self):
+    def test_same_seed_reproduces_parameters(self) -> Any:
+        """Execute ``test_same_seed_reproduces_parameters``.
+
+        Returns:
+            Result produced by this function.
+        """
         first = RandomThetaObject(p=3, seed=42)
         second = RandomThetaObject(p=3, seed=42)
 
@@ -24,14 +35,24 @@ class TestThetaObject(unittest.TestCase):
         ):
             np.testing.assert_array_equal(first_array, second_array)
 
-    def test_rejects_incorrect_parameter_shape(self):
+    def test_rejects_incorrect_parameter_shape(self) -> Any:
+        """Execute ``test_rejects_incorrect_parameter_shape``.
+
+        Returns:
+            Result produced by this function.
+        """
         arrays = RandomThetaObject(p=3, seed=42).thetas.copy()
         arrays[1] = np.zeros((2, 2))
 
         with self.assertRaises(ValueError):
             ThetaObject(arrays)
 
-    def test_rejects_nonpositive_dimension(self):
+    def test_rejects_nonpositive_dimension(self) -> Any:
+        """Execute ``test_rejects_nonpositive_dimension``.
+
+        Returns:
+            Result produced by this function.
+        """
         with self.assertRaises(ValueError):
             RandomThetaObject(p=0)
 

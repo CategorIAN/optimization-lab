@@ -1,3 +1,4 @@
+from typing import Any
 from itertools import combinations
 from functools import reduce
 
@@ -17,10 +18,19 @@ class TSP_HK:
     vertices_to_visit includes current_vertex.
     """
 
-    def policy(self, graph, cost_table):
+    def policy(self, graph: Any, cost_table: Any) -> Any:
         """Return a function selecting the best next vertex and cost."""
 
-        def best_choice(vertices_to_visit, current_vertex):
+        def best_choice(vertices_to_visit: Any, current_vertex: Any) -> Any:
+            """Execute ``best_choice``.
+
+            Args:
+                vertices_to_visit: Input accepted by this function.
+                current_vertex: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             remaining_vertices = vertices_to_visit - {current_vertex}
 
             # Each choice combines one edge with a solved subproblem.
@@ -33,7 +43,16 @@ class TSP_HK:
                 for next_vertex in remaining_vertices
             ]
 
-            def choose_cheaper(best, candidate):
+            def choose_cheaper(best: Any, candidate: Any) -> Any:
+                """Execute ``choose_cheaper``.
+
+                Args:
+                    best: Input accepted by this function.
+                    candidate: Input accepted by this function.
+
+                Returns:
+                    Result produced by this function.
+                """
                 best_vertex, best_cost = best
                 _, candidate_cost = candidate
 
@@ -54,7 +73,7 @@ class TSP_HK:
 
         return best_choice
 
-    def vBest(self, graph, cost_table):
+    def vBest(self, graph: Any, cost_table: Any) -> Any:
         """Return a function selecting only the best next vertex."""
         best_choice = self.policy(graph, cost_table)
 
@@ -62,7 +81,7 @@ class TSP_HK:
             vertices_to_visit, current_vertex
         )[0]
 
-    def QBest(self, graph, cost_table):
+    def QBest(self, graph: Any, cost_table: Any) -> Any:
         """Return a function calculating only the minimum remaining cost."""
         best_choice = self.policy(graph, cost_table)
 
@@ -70,7 +89,7 @@ class TSP_HK:
             vertices_to_visit, current_vertex
         )[1]
 
-    def getQfromP(self, graph, cost_table):
+    def getQfromP(self, graph: Any, cost_table: Any) -> Any:
         """Return a function calculating all cost entries for one subset."""
         minimum_cost = self.QBest(graph, cost_table)
 
@@ -81,7 +100,7 @@ class TSP_HK:
             for current_vertex in vertices_to_visit
         }
 
-    def createQdict(self, graph):
+    def createQdict(self, graph: Any) -> Any:
         """Build the cost table in increasing order of subset size."""
         non_start_vertices = [
             vertex
@@ -89,7 +108,16 @@ class TSP_HK:
             if vertex != 0
         ]
 
-        def build_level(cost_table, subset_size):
+        def build_level(cost_table: Any, subset_size: Any) -> Any:
+            """Execute ``build_level``.
+
+            Args:
+                cost_table: Input accepted by this function.
+                subset_size: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if subset_size == graph.n:
                 return cost_table
 
@@ -118,14 +146,22 @@ class TSP_HK:
 
         return build_level({}, 1)
 
-    def S_not(self, graph, tour):
+    def S_not(self, graph: Any, tour: Any) -> Any:
         """Return the vertices not yet included in the tour."""
         return set(graph.vertices).difference(tour)
 
-    def calculateWalkfromQ(self, graph, cost_table):
+    def calculateWalkfromQ(self, graph: Any, cost_table: Any) -> Any:
         """Reconstruct an optimal tour from the completed cost table."""
 
-        def extend_tour(tour):
+        def extend_tour(tour: Any) -> Any:
+            """Execute ``extend_tour``.
+
+            Args:
+                tour: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             if len(tour) == graph.n:
                 return tour
 
@@ -146,7 +182,7 @@ class TSP_HK:
 
         return extend_tour([0])
 
-    def calculateWalk(self, graph):
+    def calculateWalk(self, graph: Any) -> Any:
         """
         Return an optimal tour starting at vertex 0.
 

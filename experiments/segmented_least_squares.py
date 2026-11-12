@@ -1,3 +1,4 @@
+from typing import Any
 import random
 import numpy as np
 from tail_recursive import tail_recursive
@@ -8,12 +9,24 @@ import matplotlib.pyplot as plt
 
 
 def generate_segmented_points(
-    size,
-    break_prob=0,
-    sigma=1,
-    slope_size=1,
-    seed=None,
-):
+    size: Any,
+    break_prob: Any=0,
+    sigma: Any=1,
+    slope_size: Any=1,
+    seed: Any=None,
+) -> Any:
+    """Execute ``generate_segmented_points``.
+
+    Args:
+        size: Input accepted by this function.
+        break_prob: Input accepted by this function.
+        sigma: Input accepted by this function.
+        slope_size: Input accepted by this function.
+        seed: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     if size < 1:
         raise ValueError("size must be positive.")
 
@@ -36,7 +49,17 @@ def generate_segmented_points(
     ]
 
     @tail_recursive
-    def generate(start, remaining_breaks, y):
+    def generate(start: Any, remaining_breaks: Any, y: Any) -> Any:
+        """Execute ``generate``.
+
+        Args:
+            start: Input accepted by this function.
+            remaining_breaks: Input accepted by this function.
+            y: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         slope = rng.randint(-slope_size, slope_size)
 
         end = (
@@ -75,7 +98,12 @@ from dynamic_programming.segmented_least_squares import (
 )
 
 
-def plot_experiment():
+def plot_experiment() -> Any:
+    """Execute ``plot_experiment``.
+
+    Returns:
+        Result produced by this function.
+    """
     x, y, breaks = generate_segmented_points(
         size=30,
         break_prob=0.2,

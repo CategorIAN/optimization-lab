@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 import pytest
 
@@ -8,7 +9,12 @@ from dynamic_programming.segmented_least_squares import (
 from experiments.segmented_least_squares import generate_segmented_points
 
 
-def test_generate_segmented_points():
+def test_generate_segmented_points() -> Any:
+    """Execute ``test_generate_segmented_points``.
+
+    Returns:
+        Result produced by this function.
+    """
     x, y, breaks = generate_segmented_points(
         size=30,
         break_prob=0.2,
@@ -23,7 +29,12 @@ def test_generate_segmented_points():
     assert all(1 <= i < 30 for i in breaks)
 
 
-def test_reproducibility():
+def test_reproducibility() -> Any:
+    """Execute ``test_reproducibility``.
+
+    Returns:
+        Result produced by this function.
+    """
     result1 = generate_segmented_points(30, seed=42)
     result2 = generate_segmented_points(30, seed=42)
 
@@ -32,7 +43,12 @@ def test_reproducibility():
     assert result1[2] == result2[2]
 
 
-def test_break_probabilities():
+def test_break_probabilities() -> Any:
+    """Execute ``test_break_probabilities``.
+
+    Returns:
+        Result produced by this function.
+    """
     _, _, no_breaks = generate_segmented_points(
         10, break_prob=0
     )
@@ -45,7 +61,12 @@ def test_break_probabilities():
     assert all_breaks == list(range(1, 10))
 
 
-def test_recover_segments():
+def test_recover_segments() -> Any:
+    """Execute ``test_recover_segments``.
+
+    Returns:
+        Result produced by this function.
+    """
     segment_array = [0, 0, 0, 3, 3, 3]
 
     assert recover_segments(segment_array) == [
@@ -54,7 +75,12 @@ def test_recover_segments():
     ]
 
 
-def test_perfect_linear_data():
+def test_perfect_linear_data() -> Any:
+    """Execute ``test_perfect_linear_data``.
+
+    Returns:
+        Result produced by this function.
+    """
     x = np.arange(6)
     y = 2 * x + 3
 
@@ -66,7 +92,12 @@ def test_perfect_linear_data():
     assert objective == pytest.approx(10)
 
 
-def test_two_segments():
+def test_two_segments() -> Any:
+    """Execute ``test_two_segments``.
+
+    Returns:
+        Result produced by this function.
+    """
     x = np.arange(6)
     y = np.array([0, 1, 2, 10, 11, 12])
 

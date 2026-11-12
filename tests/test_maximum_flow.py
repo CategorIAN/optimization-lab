@@ -1,3 +1,4 @@
+from typing import Any
 
 import pytest
 
@@ -9,7 +10,12 @@ from graphs.maximum_flow import (
 )
 
 
-def test_residual_network():
+def test_residual_network() -> Any:
+    """Execute ``test_residual_network``.
+
+    Returns:
+        Result produced by this function.
+    """
     capacity = {(0, 1): 10}
     flow = {(0, 1): 4}
 
@@ -19,7 +25,12 @@ def test_residual_network():
     }
 
 
-def test_residual_network_antiparallel():
+def test_residual_network_antiparallel() -> Any:
+    """Execute ``test_residual_network_antiparallel``.
+
+    Returns:
+        Result produced by this function.
+    """
     capacity = {(0, 1): 10, (1, 0): 7}
     flow = {(0, 1): 4, (1, 0): 3}
 
@@ -30,7 +41,15 @@ def test_residual_network_antiparallel():
 
 
 @pytest.mark.parametrize("strategy", ["bfs", "dfs"])
-def test_augmenting_path(strategy):
+def test_augmenting_path(strategy: Any) -> Any:
+    """Execute ``test_augmenting_path``.
+
+    Args:
+        strategy: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     residual = {
         (0, 1): 10,
         (0, 2): 5,
@@ -43,7 +62,12 @@ def test_augmenting_path(strategy):
     assert path in ([0, 1, 3], [0, 2, 3])
 
 
-def test_augment_flow():
+def test_augment_flow() -> Any:
+    """Execute ``test_augment_flow``.
+
+    Returns:
+        Result produced by this function.
+    """
     capacity = {(0, 1): 10, (1, 2): 5}
     flow = {(0, 1): 0, (1, 2): 0}
 
@@ -52,7 +76,12 @@ def test_augment_flow():
     assert result == {(0, 1): 5, (1, 2): 5}
 
 
-def test_augment_flow_backward():
+def test_augment_flow_backward() -> Any:
+    """Execute ``test_augment_flow_backward``.
+
+    Returns:
+        Result produced by this function.
+    """
     capacity = {(0, 1): 10}
     flow = {(0, 1): 4}
 
@@ -62,7 +91,15 @@ def test_augment_flow_backward():
 
 
 @pytest.mark.parametrize("strategy", ["bfs", "dfs"])
-def test_ford_fulkerson(strategy):
+def test_ford_fulkerson(strategy: Any) -> Any:
+    """Execute ``test_ford_fulkerson``.
+
+    Args:
+        strategy: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     capacity = {
         (0, 1): 10,
         (0, 2): 5,
@@ -78,7 +115,12 @@ def test_ford_fulkerson(strategy):
     assert all(0 <= flow[e] <= capacity[e] for e in capacity)
 
 
-def test_no_path():
+def test_no_path() -> Any:
+    """Execute ``test_no_path``.
+
+    Returns:
+        Result produced by this function.
+    """
     residual = {(0, 1): 5}
 
     assert augmenting_path(residual, 0, 2) is None

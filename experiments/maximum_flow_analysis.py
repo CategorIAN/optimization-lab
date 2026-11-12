@@ -1,3 +1,4 @@
+from typing import Any
 
 from time import perf_counter
 import pandas as pd
@@ -10,7 +11,20 @@ from graphs.random_flow_network import random_flow_network
 from pathlib import Path
 
 
-def analysis(first, last, step, graph=False, seed=42, trials=100):
+def analysis(first: Any, last: Any, step: Any, graph: Any=False, seed: Any=42, trials: Any=100) -> Any:
+    """Execute ``analysis``.
+
+    Args:
+        first: Input accepted by this function.
+        last: Input accepted by this function.
+        step: Input accepted by this function.
+        graph: Input accepted by this function.
+        seed: Input accepted by this function.
+        trials: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     records = []
 
     for n in range(first, last + 1, step):
@@ -77,7 +91,16 @@ def analysis(first, last, step, graph=False, seed=42, trials=100):
     return df
 
 
-def create_chart(df=None, file=None):
+def create_chart(df: Any=None, file: Any=None) -> Any:
+    """Execute ``create_chart``.
+
+    Args:
+        df: Input accepted by this function.
+        file: Input accepted by this function.
+
+    Returns:
+        Result produced by this function.
+    """
     if df is None:
         df = pd.read_csv(file, index_col=0)
 

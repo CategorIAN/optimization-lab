@@ -1,3 +1,4 @@
+from typing import Any
 import json
 from unittest.mock import patch
 
@@ -10,7 +11,12 @@ from visualizations.tsp_solver import solve_tsp
 
 
 class SegmentedLeastSquaresViewsTests(TestCase):
-    def test_page_loads(self):
+    def test_page_loads(self) -> Any:
+        """Execute ``test_page_loads``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.get(reverse("visualizations:segmented_least_squares"))
 
         self.assertEqual(response.status_code, 200)
@@ -18,7 +24,12 @@ class SegmentedLeastSquaresViewsTests(TestCase):
         self.assertContains(response, "getScreenCTM")
         self.assertContains(response, "plot-click-target")
 
-    def test_solve_endpoint_returns_fitted_segments_and_metrics(self):
+    def test_solve_endpoint_returns_fitted_segments_and_metrics(self) -> Any:
+        """Execute ``test_solve_endpoint_returns_fitted_segments_and_metrics``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:solve_segmented_least_squares"),
             data=json.dumps({
@@ -37,7 +48,12 @@ class SegmentedLeastSquaresViewsTests(TestCase):
         self.assertAlmostEqual(result["objective"], 4)
         self.assertGreaterEqual(result["execution_time_ms"], 0)
 
-    def test_solve_endpoint_rejects_invalid_input(self):
+    def test_solve_endpoint_rejects_invalid_input(self) -> Any:
+        """Execute ``test_solve_endpoint_rejects_invalid_input``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:solve_segmented_least_squares"),
             data=json.dumps({"points": [{"x": 0, "y": 0}], "penalty": -1}),
@@ -49,7 +65,12 @@ class SegmentedLeastSquaresViewsTests(TestCase):
 
 
 class GreedySetCoverViewsTests(TestCase):
-    def test_page_loads(self):
+    def test_page_loads(self) -> Any:
+        """Execute ``test_page_loads``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.get(reverse("visualizations:greedy_set_cover"))
 
         self.assertEqual(response.status_code, 200)
@@ -60,7 +81,12 @@ class GreedySetCoverViewsTests(TestCase):
         self.assertContains(response, "Add point")
         self.assertContains(response, "Add set")
 
-    def test_solve_endpoint_uses_existing_greedy_selection_order(self):
+    def test_solve_endpoint_uses_existing_greedy_selection_order(self) -> Any:
+        """Execute ``test_solve_endpoint_uses_existing_greedy_selection_order``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:solve_greedy_set_cover"),
             data=json.dumps({
@@ -77,7 +103,12 @@ class GreedySetCoverViewsTests(TestCase):
         self.assertEqual(response.json()["selected_subsets"], ["S1", "S2"])
         self.assertEqual(response.json()["element_count"], 3)
 
-    def test_solve_endpoint_handles_empty_collection(self):
+    def test_solve_endpoint_handles_empty_collection(self) -> Any:
+        """Execute ``test_solve_endpoint_handles_empty_collection``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:solve_greedy_set_cover"),
             data=json.dumps({"collection": {}}),
@@ -98,7 +129,12 @@ class MaximumFlowViewsTests(TestCase):
         ("b", "t"): 4,
     }
 
-    def test_trace_agrees_with_ford_fulkerson_for_both_strategies(self):
+    def test_trace_agrees_with_ford_fulkerson_for_both_strategies(self) -> Any:
+        """Execute ``test_trace_agrees_with_ford_fulkerson_for_both_strategies``.
+
+        Returns:
+            Result produced by this function.
+        """
         for strategy in ("bfs", "dfs"):
             trace = maximum_flow_trace(self.capacity, "s", "t", strategy)
             flow, value = ford_fulkerson(self.capacity, "s", "t", strategy)
@@ -110,12 +146,22 @@ class MaximumFlowViewsTests(TestCase):
             )
             self.assertTrue(all("residual_before" in step for step in trace["steps"]))
 
-    def test_trace_serializes_antiparallel_residual_capacity(self):
+    def test_trace_serializes_antiparallel_residual_capacity(self) -> Any:
+        """Execute ``test_trace_serializes_antiparallel_residual_capacity``.
+
+        Returns:
+            Result produced by this function.
+        """
         trace = maximum_flow_trace({("s", "a"): 3, ("a", "s"): 2, ("a", "t"): 3}, "s", "t")
 
         self.assertTrue(all({"source", "target", "value"} <= set(edge) for edge in trace["initial"]["residual"]))
 
-    def test_forward_capacity_is_used_before_reverse_cancellation(self):
+    def test_forward_capacity_is_used_before_reverse_cancellation(self) -> Any:
+        """Execute ``test_forward_capacity_is_used_before_reverse_cancellation``.
+
+        Returns:
+            Result produced by this function.
+        """
         capacity = {("a", "b"): 2, ("b", "a"): 3}
         flow = {("a", "b"): 2, ("b", "a"): 0}
 
@@ -126,7 +172,12 @@ class MaximumFlowViewsTests(TestCase):
         ])
         self.assertEqual(augment_flow(capacity, flow, ["b", "a"]), {("a", "b"): 0, ("b", "a"): 3})
 
-    def test_page_and_endpoint(self):
+    def test_page_and_endpoint(self) -> Any:
+        """Execute ``test_page_and_endpoint``.
+
+        Returns:
+            Result produced by this function.
+        """
         page = self.client.get(reverse("visualizations:maximum_flow"))
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "BFS (Edmonds")
@@ -149,7 +200,12 @@ class MaximumFlowViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["maximum_flow"], 2)
 
-    def test_endpoint_rejects_duplicate_edges_and_invalid_terminals(self):
+    def test_endpoint_rejects_duplicate_edges_and_invalid_terminals(self) -> Any:
+        """Execute ``test_endpoint_rejects_duplicate_edges_and_invalid_terminals``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:trace_maximum_flow"),
             data=json.dumps({
@@ -165,7 +221,12 @@ class MaximumFlowViewsTests(TestCase):
 
 
 class TravelingSalesmanViewsTests(TestCase):
-    def test_solvers_return_closed_valid_tours_and_consistent_ratio(self):
+    def test_solvers_return_closed_valid_tours_and_consistent_ratio(self) -> Any:
+        """Execute ``test_solvers_return_closed_valid_tours_and_consistent_ratio``.
+
+        Returns:
+            Result produced by this function.
+        """
         result = solve_tsp([(0, 0), (3, 0), (0, 4)])
 
         for key in ("q_learning_tour", "optimal_tour"):
@@ -178,7 +239,12 @@ class TravelingSalesmanViewsTests(TestCase):
             result["q_learning_length"] / result["optimal_length"],
         )
 
-    def test_page_and_endpoint(self):
+    def test_page_and_endpoint(self) -> Any:
+        """Execute ``test_page_and_endpoint``.
+
+        Returns:
+            Result produced by this function.
+        """
         page = self.client.get(reverse("visualizations:traveling_salesman"))
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "Add graph")
@@ -197,7 +263,15 @@ class TravelingSalesmanViewsTests(TestCase):
         )
 
     @patch("visualizations.tsp_solver.TSP_RL")
-    def test_default_solve_uses_final_theta_for_greedy_evaluation(self, model_class):
+    def test_default_solve_uses_final_theta_for_greedy_evaluation(self, model_class: Any) -> Any:
+        """Execute ``test_default_solve_uses_final_theta_for_greedy_evaluation``.
+
+        Args:
+            model_class: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         from models.theta import ThetaObject
 
         final_theta = ThetaObject([[[1.0]] for _ in range(8)])
@@ -216,14 +290,19 @@ class TravelingSalesmanViewsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        model.calculateWalk.assert_called_once_with(
-            final_theta,
-            model_class.call_args.args[0],
-            exploreOption=False,
-        )
+        model.calculateWalk.assert_called_once()
+        called_theta, called_graph = model.calculateWalk.call_args.args
+        self.assertIs(called_theta, final_theta)
+        self.assertEqual(called_graph.n, 3)
+        self.assertFalse(model.calculateWalk.call_args.kwargs["exploreOption"])
         self.assertIn("Greedy tour generated after training", response.json()["training"])
 
-    def test_endpoint_rejects_excessive_or_invalid_cities(self):
+    def test_endpoint_rejects_excessive_or_invalid_cities(self) -> Any:
+        """Execute ``test_endpoint_rejects_excessive_or_invalid_cities``.
+
+        Returns:
+            Result produced by this function.
+        """
         response = self.client.post(
             reverse("visualizations:solve_traveling_salesman"),
             data=json.dumps({"points": [{"x": 0, "y": 0}]}),

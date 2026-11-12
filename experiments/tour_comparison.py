@@ -1,3 +1,4 @@
+from typing import Any
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,12 +21,21 @@ class TourComparison:
         "gamma",
     ]
 
-    def __init__(self, hyp_dict, output_dir="results/tour_comparison"):
+    def __init__(self, hyp_dict: Any, output_dir: Any="results/tour_comparison") -> Any:
+        """Execute ``__init__``.
+
+        Args:
+            hyp_dict: Input accepted by this function.
+            output_dir: Input accepted by this function.
+
+        Returns:
+            Result produced by this function.
+        """
         self.hyp_dict = hyp_dict
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def run(self, graph_file, graphDist=None, n=None):
+    def run(self, graph_file: Any, graphDist: Any=None, n: Any=None) -> Any:
         """
         Load or generate solved graphs, then train across them.
 
@@ -64,10 +74,20 @@ class TourComparison:
             in zip(solved_graphs, graph_tours)
         ]
 
-    def saveResults(self, comparisons):
+    def saveResults(self, comparisons: Any) -> Any:
         """Save one row per training episode."""
 
-        def episode_record(index, solved, tour):
+        def episode_record(index: Any, solved: Any, tour: Any) -> Any:
+            """Execute ``episode_record``.
+
+            Args:
+                index: Input accepted by this function.
+                solved: Input accepted by this function.
+                tour: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             approximate_distance = solved.graph.tourDistance(tour)
 
             return {
@@ -94,7 +114,7 @@ class TourComparison:
 
         return results
 
-    def drawGraphs(self, comparisons):
+    def drawGraphs(self, comparisons: Any) -> Any:
         """Save and display optimal and learned tours."""
         if not comparisons:
             raise ValueError("There are no tours to plot.")
@@ -117,8 +137,20 @@ class TourComparison:
 
         fig.suptitle("Tours Constructed During Training")
 
-        def plot_tour(axis, graph, tour, label, style):
+        def plot_tour(axis: Any, graph: Any, tour: Any, label: Any, style: Any) -> Any:
             # Explicitly close each route using its own tour order.
+            """Execute ``plot_tour``.
+
+            Args:
+                axis: Input accepted by this function.
+                graph: Input accepted by this function.
+                tour: Input accepted by this function.
+                label: Input accepted by this function.
+                style: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             closed_tour = graph.closeWalk(list(tour))
             coordinates = graph.points[closed_tour]
 

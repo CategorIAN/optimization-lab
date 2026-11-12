@@ -1,3 +1,4 @@
+from typing import Any
 import json
 from dataclasses import dataclass
 
@@ -15,7 +16,7 @@ class SolvedGraph:
 
 
 class WalkedGraphs:
-    def __init__(self, file, graphDist=None, n=None):
+    def __init__(self, file: Any, graphDist: Any=None, n: Any=None) -> Any:
         """
         Load solved graphs from JSON, or generate and save them.
 
@@ -23,12 +24,20 @@ class WalkedGraphs:
         """
         self.graphs = self.getGraphs(file, graphDist, n)
 
-    def getGraphsFromJSON(self, file):
+    def getGraphsFromJSON(self, file: Any) -> Any:
         """Read graphs and their optimal solutions from a JSON file."""
         with open(file, "r", encoding="utf-8") as json_file:
             records = json.load(json_file)
 
-        def read_graph(record):
+        def read_graph(record: Any) -> Any:
+            """Execute ``read_graph``.
+
+            Args:
+                record: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             return SolvedGraph(
                 graph=EuclideanGraph(record["points"]),
                 shortest_cycle=list(record["optimal_tour"]),
@@ -37,11 +46,16 @@ class WalkedGraphs:
 
         return [read_graph(record) for record in records]
 
-    def createGraphs(self, graphDist, n):
+    def createGraphs(self, graphDist: Any, n: Any) -> Any:
         """Generate graphs and solve each one with Held–Karp."""
         solver = TSP_HK()
 
-        def create_graph():
+        def create_graph() -> Any:
+            """Execute ``create_graph``.
+
+            Returns:
+                Result produced by this function.
+            """
             graph = graphDist.randomGraph()
             tour = solver.calculateWalk(graph)
 
@@ -53,10 +67,18 @@ class WalkedGraphs:
 
         return [create_graph() for _ in range(n)]
 
-    def toJSON(self, graphs, file):
+    def toJSON(self, graphs: Any, file: Any) -> Any:
         """Save coordinates in original vertex order and store tours separately."""
 
-        def graph_record(solved_graph):
+        def graph_record(solved_graph: Any) -> Any:
+            """Execute ``graph_record``.
+
+            Args:
+                solved_graph: Input accepted by this function.
+
+            Returns:
+                Result produced by this function.
+            """
             return {
                 "points": solved_graph.graph.points.tolist(),
                 "optimal_tour": [
@@ -81,7 +103,7 @@ class WalkedGraphs:
 
         return records
 
-    def getGraphs(self, file, graphDist, n):
+    def getGraphs(self, file: Any, graphDist: Any, n: Any) -> Any:
         """Load an existing dataset, or create it if the file is absent."""
         try:
             return self.getGraphsFromJSON(file)
